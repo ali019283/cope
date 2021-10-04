@@ -104,9 +104,9 @@ int main(int argc, char *argv[]){
 	char *temp_dir = "/root/.cache/pk/";
 	chdir(temp_dir);
 	switch (opt) {
+		char *package;
 		case 'd':
 			printf("Packages that will be installed:\n");
-			char *package;
 			char *package_or;
 			for (int a = 2; a < argc ; a++){
 				package_or=(argv[a]);
@@ -125,7 +125,16 @@ int main(int argc, char *argv[]){
 				download(str, package);
 				extract(package);
 				system(build);
-			}		
-	}
+			}
+			return 0;
+		case 'u':
+			for (int a = 2; a < argc ; a++){	
+				package=argv[a];
+				char remove[120];
+				sprintf(remove, "/var/db/rp/%s/uninstall", package);
+				system(remove);
+			
+			}
 	return 0;
+	}
 }
