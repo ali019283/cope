@@ -15,3 +15,10 @@ run
 # make install
 ```
 to install
+
+dont forget to run 
+```
+# cd /var/db
+# git clone https://github.com/ali019283/rp
+```
+
