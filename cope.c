@@ -114,6 +114,8 @@ int main(int argc, char *argv[]){
 				sprintf(build, "/var/db/rp/%s/build", package_or);
 				char source[120];
 				sprintf(source, "/var/db/rp/%s/source", package_or);
+				char ins_pkg[120];
+				sprintf(ins_pkg, "/var/db/rp/installed/%s", package_or);
 				FILE *fptr = fopen(source, "r");
 				char str[120];
 				fgets(str, 120, fptr);
@@ -125,6 +127,7 @@ int main(int argc, char *argv[]){
 				download(str, package);
 				extract(package);
 				system(build);
+				mkdir(ins_pkg, 0777);
 			}
 			return 0;
 		case 'u':
