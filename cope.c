@@ -100,16 +100,24 @@ int download(char *url, char *destination){
 }
 int main(int argc, char *argv[]){
 	char buf[60];
-	char opt = argc > 1 ? argv[1][0] : ' ';
+	if(geteuid() != 0)
+        {
+                puts("This program needs root privileges, exiting.");
+                exit(0);
+        }
+        char opt = argc > 1 ? argv[1][0] : ' ';
 	char *temp_dir = "/root/.cache/pk/";
 	chdir(temp_dir);
 	switch (opt) {
 		char *package;
-		case 'd':
-			printf("Packages that will be installed:\n");
+                case 'd':
+			printf("\x1b[31m>>> \x1b[33m Packages that will be installed:\x1b[0m \n");
+                        for(int a = 2; a < argc; a++){
+                                printf("\x1b[31m>>> \x1b[0m %s \n", argv[a]);
+                        }
 			char *package_or;
-			for (int a = 2; a < argc ; a++){
-				package_or=(argv[a]);
+			for (int a = 2; a < argc ; a=a+1){
+                                package_or=(argv[a]);
 				char build[120];
 				sprintf(build, "/var/db/rp/%s/build", package_or);
 				char source[120];
@@ -117,13 +125,18 @@ int main(int argc, char *argv[]){
 				char ins_pkg[120];
 				sprintf(ins_pkg, "/var/db/rp/installed/%s", package_or);
 				FILE *fptr = fopen(source, "r");
+                                if(fptr==NULL){
+                                        printf("\x1b[31m>>>\x1b[33m Can't find package '%s', skiping\x1b[0m\n", argv[a]);
+                                        exit(0);
+                                }
 				char str[120];
 				fgets(str, 120, fptr);
 				fclose(fptr);
-				strncpy(buf, argv[a], 60);
-				printf("%s \n", argv[a]);
-				strcat(argv[a], ".tar");
-				package=(argv[a]);
+				char arg[120];
+                                snprintf(arg, "%s", argv[a]);
+                                strncpy(buf, arg, 60);
+				strcat(arg, ".tar");
+				package=arg;
 				download(str, package);
 				extract(package);
 				system(build);
@@ -131,6 +144,10 @@ int main(int argc, char *argv[]){
 			}
 			return 0;
 		case 'u':
+                        printf("\x1b[31m>>> \x1b[33m Packages that will be removed:\x1b[0m \n");
+                        for(int a = 2; a < argc; a++){
+                                printf("\x1b[31m>>> \x1b[0m %s \n", argv[a]);
+                        }
 			for (int a = 2; a < argc ; a++){	
 				package=argv[a];
 				char remove[120];
