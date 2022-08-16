@@ -130,7 +130,6 @@ int fpc(char *b){
 				break;
 			}
 		}
-		//puts(s);
 		inst(packs[i]);
 		fpc(packs[i]);
 	}
