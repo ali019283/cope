@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <archive.h>
 #include <archive_entry.h>
+char *packs[240];
 int copy_data(struct archive *ar, struct archive *aw){
 	int r;
 	const void *buff;
@@ -98,41 +99,63 @@ int download(char *url, char *destination){
 
 	return 0;
 }
-int inst(char *argv[], int a){
-	char buf[60];
-	char str[120], s[120], *abab[120];
-	char *package_or, *package;
-	package_or=(argv[a]);
-	char build[120];
-	sprintf(build, "/var/db/rp/%s/build", package_or);
-	char source[120];
-	sprintf(source, "/var/db/rp/%s/source", package_or);
-	char ins_pkg[120];
-	sprintf(ins_pkg, "/var/db/rp/installed/%s", package_or);
+int fpc(char *b){
+	char asd[120];
 	char depend[120];
-	sprintf(depend, "/var/db/rp/%s/depends", package_or);
+	sprintf(depend, "/var/db/rp/%s/depends", b);
+	char s[120];
+	printf("\x1b[31m>>>\x1b[0m %s\n", b);
 	FILE *dep = fopen(depend, "r");
 	if(dep==NULL){
-		puts("okok");
-		printf("\x1b[31m>>>\x1b[33m Can't find depend '%s', skiping\x1b[0m\n", argv[a]);
+		printf("\x1b[31m>>>\x1b[33m Can't find package '%s', skiping\x1b[0m\n", b);
 		return 1;
 	}
-	while (fgets(s, 120, dep)!=NULL){
+	for (int i = strlen(packs); fgets(s, 120, dep); i++){
 		s[strlen(s) - 1] = '\0';
-		abab[0]=s;
-		inst(abab, 0);
+		printf("\x1b[31m>>>\x1b[0m %s\n", s);
+		for (int y=0; y < strlen(packs); y++) {
+			if(packs[y] == s){ 
+				return 0;
+			}
+		}
+		packs[i]=s;
+		for (int g=0; g < strlen(packs); g++){
+			if (packs[g]==NULL){
+				inst(packs[i]);
+				return 0;
+			}
+			if(!strcmp(packs[i], packs[g])){
+				packs[i]='\0';
+				puts("ok");
+				break;
+			}
+		}
+		//puts(s);
+		inst(packs[i]);
+		fpc(packs[i]);
 	}
 	fclose(dep);
-
+	return 0;
+}
+int inst(char *b){
+	char buf[60];
+	char str[120];
+	char *package;
+	char build[120];
+	sprintf(build, "/var/db/rp/%s/build", b);
+	char source[120];
+	sprintf(source, "/var/db/rp/%s/source", b);
+	char ins_pkg[120];
+	sprintf(ins_pkg, "/var/db/rp/installed/%s", b);
 	FILE *fptr = fopen(source, "r");
 	if(fptr==NULL){
-		printf("\x1b[31m>>>\x1b[33m Can't find package '%s', skiping\x1b[0m\n", argv[a]);
+		printf("\x1b[31m>>>\x1b[33m Can't find package '%s', skiping\x1b[0m\n", b); // yes, when it cant find a depend it just skips, cope
 		return 1;
 	}
 	fgets(str, 120, fptr);
 	fclose(fptr);
 	char arg[120];
-	snprintf(arg, "%s", argv[a]);
+	snprintf(arg, "%s", b);
 	strncpy(buf, arg, 60);
 	strcat(arg, ".tar");
 	package=arg;
@@ -153,13 +176,12 @@ int main(int argc, char *argv[]){
 	chdir(temp_dir);
 	switch (opt) {
         case 'd':
-			printf("\x1b[31m>>> \x1b[33m Packages that will be installed:\x1b[0m \n");				
-			for(int a = 2; a < argc; a++){
-				printf("\x1b[31m>>> \x1b[0m %s \n", argv[a]);
-			}
+			printf("\x1b[31m>>>\x1b[33m Packages that will be installed:\x1b[0m \n");
 			for (int a = 2; a < argc; a++){
-				inst(argv, a);
+				packs[strlen(packs)]=argv[a];
+				fpc(argv[a]);
 			}
+			inst(packs[0]);
 			return 0;
 		case 'u':
             printf("\x1b[31m>>> \x1b[33m Packages that will be removed:\x1b[0m \n");
