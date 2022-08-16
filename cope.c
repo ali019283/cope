@@ -98,63 +98,81 @@ int download(char *url, char *destination){
 
 	return 0;
 }
-int main(int argc, char *argv[]){
+int inst(char *argv[], int a){
 	char buf[60];
+	char str[120], s[120], *abab[120];
+	char *package_or, *package;
+	package_or=(argv[a]);
+	char build[120];
+	sprintf(build, "/var/db/rp/%s/build", package_or);
+	char source[120];
+	sprintf(source, "/var/db/rp/%s/source", package_or);
+	char ins_pkg[120];
+	sprintf(ins_pkg, "/var/db/rp/installed/%s", package_or);
+	char depend[120];
+	sprintf(depend, "/var/db/rp/%s/depends", package_or);
+	FILE *dep = fopen(depend, "r");
+	if(dep==NULL){
+		puts("okok");
+		printf("\x1b[31m>>>\x1b[33m Can't find depend '%s', skiping\x1b[0m\n", argv[a]);
+		return 1;
+	}
+	while (fgets(s, 120, dep)!=NULL){
+		s[strlen(s) - 1] = '\0';
+		abab[0]=s;
+		inst(abab, 0);
+	}
+	fclose(dep);
+
+	FILE *fptr = fopen(source, "r");
+	if(fptr==NULL){
+		printf("\x1b[31m>>>\x1b[33m Can't find package '%s', skiping\x1b[0m\n", argv[a]);
+		return 1;
+	}
+	fgets(str, 120, fptr);
+	fclose(fptr);
+	char arg[120];
+	snprintf(arg, "%s", argv[a]);
+	strncpy(buf, arg, 60);
+	strcat(arg, ".tar");
+	package=arg;
+	download(str, package);
+	extract(package);
+	system(build);
+	mkdir(ins_pkg, 0777);
+	return 0;
+}
+int main(int argc, char *argv[]){
 	if(geteuid() != 0)
         {
-                puts("This program needs root privileges, exiting.");
-                exit(0);
+            puts("This program needs root privileges, exiting.");
+            exit(0);
         }
-        char opt = argc > 1 ? argv[1][0] : ' ';
+    char opt = argc > 1 ? argv[1][0] : ' ';
 	char *temp_dir = "/root/.cache/pk/";
 	chdir(temp_dir);
 	switch (opt) {
-		char *package;
-                case 'd':
-			printf("\x1b[31m>>> \x1b[33m Packages that will be installed:\x1b[0m \n");
-                        for(int a = 2; a < argc; a++){
-                                printf("\x1b[31m>>> \x1b[0m %s \n", argv[a]);
-                        }
-			char *package_or;
+        case 'd':
+			printf("\x1b[31m>>> \x1b[33m Packages that will be installed:\x1b[0m \n");				
+			for(int a = 2; a < argc; a++){
+				printf("\x1b[31m>>> \x1b[0m %s \n", argv[a]);
+			}
 			for (int a = 2; a < argc; a++){
-                                package_or=(argv[a]);
-				char build[120];
-				sprintf(build, "/var/db/rp/%s/build", package_or);
-				char source[120];
-				sprintf(source, "/var/db/rp/%s/source", package_or);
-				char ins_pkg[120];
-				sprintf(ins_pkg, "/var/db/rp/installed/%s", package_or);
-				FILE *fptr = fopen(source, "r");
-                                if(fptr==NULL){
-                                        printf("\x1b[31m>>>\x1b[33m Can't find package '%s', skiping\x1b[0m\n", argv[a]);
-                                        continue;
-                                }
-				char str[120];
-				fgets(str, 120, fptr);
-				fclose(fptr);
-				char arg[120];
-                                snprintf(arg, "%s", argv[a]);
-                                strncpy(buf, arg, 60);
-				strcat(arg, ".tar");
-				package=arg;
-				download(str, package);
-				extract(package);
-				system(build);
-				mkdir(ins_pkg, 0777);
+				inst(argv, a);
 			}
 			return 0;
 		case 'u':
-                        printf("\x1b[31m>>> \x1b[33m Packages that will be removed:\x1b[0m \n");
-                        for(int a = 2; a < argc; a++){
-                                printf("\x1b[31m>>> \x1b[0m %s \n", argv[a]);
-                        }
+            printf("\x1b[31m>>> \x1b[33m Packages that will be removed:\x1b[0m \n");
+            for(int a = 2; a < argc; a++){
+				printf("\x1b[31m>>> \x1b[0m %s \n", argv[a]);
+            }
 			for (int a = 2; a < argc ; a++){	
+				char *package;
 				package=argv[a];
 				char remove[120];
 				sprintf(remove, "/var/db/rp/%s/uninstall", package);
 				system(remove);
-			
 			}
-	return 0;
+		return 0;
 	}
 }
