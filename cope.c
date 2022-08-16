@@ -116,7 +116,7 @@ int main(int argc, char *argv[]){
                                 printf("\x1b[31m>>> \x1b[0m %s \n", argv[a]);
                         }
 			char *package_or;
-			for (int a = 2; a < argc ; a=a+1){
+			for (int a = 2; a < argc; a++){
                                 package_or=(argv[a]);
 				char build[120];
 				sprintf(build, "/var/db/rp/%s/build", package_or);
@@ -127,7 +127,7 @@ int main(int argc, char *argv[]){
 				FILE *fptr = fopen(source, "r");
                                 if(fptr==NULL){
                                         printf("\x1b[31m>>>\x1b[33m Can't find package '%s', skiping\x1b[0m\n", argv[a]);
-                                        exit(0);
+                                        continue;
                                 }
 				char str[120];
 				fgets(str, 120, fptr);
