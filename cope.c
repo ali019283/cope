@@ -104,8 +104,8 @@ int is(int i, char s[]){
 	printf("\x1b[31m>>>\x1b[0m %s\n", s);
 	for (int y=0; y < strlen(packs); y++) {
 		if(packs[y] == s){ 
-			return 0;
-			}
+		        return 0;
+		}
 	}
 	packs[i]=s;
 	for (int g=0; g < strlen(packs); g++){
@@ -115,7 +115,7 @@ int is(int i, char s[]){
 		}
 		if(!strcmp(packs[i], packs[g])){
 			inst(packs[g]);
-            packs[i]="0";
+                        packs[i]="0";
 			return 1;
 		}
 	}
@@ -184,10 +184,10 @@ int main(int argc, char *argv[]){
 			}
 			return 0;
 		case 'u':
-            printf("\x1b[31m>>> \x1b[33m Packages that will be removed:\x1b[0m \n");
-            for(int a = 2; a < argc; a++){
+                        printf("\x1b[31m>>> \x1b[33m Packages that will be removed:\x1b[0m \n");
+        	        for(int a = 2; a < argc; a++){
 				printf("\x1b[31m>>> \x1b[0m %s \n", argv[a]);
-            }
+                        }
 			for (int a = 2; a < argc ; a++){	
 				char *package;
 				package=argv[a];
