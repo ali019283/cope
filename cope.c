@@ -148,7 +148,7 @@ int inst(char *b){
 	sprintf(ins_pkg, "/var/db/rp/installed/%s", b);
 	FILE *fptr = fopen(source, "r");
 	if(fptr==NULL){
-		printf("\x1b[31m>>>\x1b[33m Can't find package '%s', skiping\x1b[0m\n", b); // yes, when it cant find a depend it just skips, cope
+		printf("\x1b[31m>>>\x1b[33m Can't find package '%s', skiping\x1b[0m\n", b);
 		return 1;
 	}
 	fgets(str, 120, fptr);
