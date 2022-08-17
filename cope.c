@@ -99,8 +99,30 @@ int download(char *url, char *destination){
 
 	return 0;
 }
+int is(int i, char s[]){
+	s[strlen(s) - 1] = '\0';
+	printf("\x1b[31m>>>\x1b[0m %s\n", s);
+	for (int y=0; y < strlen(packs); y++) {
+		if(packs[y] == s){ 
+			return 0;
+			}
+	}
+	packs[i]=s;
+	for (int g=0; g < strlen(packs); g++){
+		if (packs[g]==NULL){
+		inst(packs[i]);
+			return 0;
+		}
+		if(!strcmp(packs[i], packs[g])){
+			inst(packs[g]);
+            packs[i]="0";
+			return 1;
+		}
+	}
+	inst(packs[i]);
+	fpc(packs[i]);
+}
 int fpc(char *b){
-	char asd[120];
 	char depend[120];
 	sprintf(depend, "/var/db/rp/%s/depends", b);
 	char s[120];
@@ -111,28 +133,7 @@ int fpc(char *b){
 		return 1;
 	}
 	for (int i = strlen(packs); fgets(s, 120, dep); i++){
-		s[strlen(s) - 1] = '\0';
-		printf("\x1b[31m>>>\x1b[0m %s\n", s);
-		for (int y=0; y < strlen(packs); y++) {
-			if(packs[y] == s){ 
-				return 0;
-			}
-		}
-		packs[i]=s;
-		for (int g=0; g < strlen(packs); g++){
-			if (packs[g]==NULL){
-				inst(packs[i]);
-				return 0;
-			}
-			if(!strcmp(packs[i], packs[g])){
-				inst(packs[g]);
-                                packs[i]='\0';
-                                i++;
-				return 1;
-			}
-		}
-		inst(packs[i]);
-		fpc(packs[i]);
+		is(i, s);
 	}
 	fclose(dep);
 	return 0;
