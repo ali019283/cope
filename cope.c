@@ -107,7 +107,7 @@ int fpc(char *b){
 	printf("\x1b[31m>>>\x1b[0m %s\n", b);
 	FILE *dep = fopen(depend, "r");
 	if(dep==NULL){
-		printf("\x1b[31m>>>\x1b[33m Can't find package '%s', skiping\x1b[0m\n", b);
+		printf("\x1b[31m>>>\x1b[33m Package '%s' doesnt have any dependency folder, skiping dependency check\x1b[0m\n", b);
 		return 1;
 	}
 	for (int i = strlen(packs); fgets(s, 120, dep); i++){
@@ -177,10 +177,9 @@ int main(int argc, char *argv[]){
         case 'd':
 			printf("\x1b[31m>>>\x1b[33m Packages that will be installed:\x1b[0m \n");
 			for (int a = 2; a < argc; a++){
-				packs[strlen(packs)]=argv[a];
-				fpc(argv[a]);
+                                fpc(argv[a]);
+                                inst(argv[a]);
 			}
-			inst(packs[0]);
 			return 0;
 		case 'u':
             printf("\x1b[31m>>> \x1b[33m Packages that will be removed:\x1b[0m \n");
