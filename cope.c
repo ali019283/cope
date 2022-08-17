@@ -125,9 +125,10 @@ int fpc(char *b){
 				return 0;
 			}
 			if(!strcmp(packs[i], packs[g])){
-				packs[i]='\0';
-				puts("ok");
-				break;
+				inst(packs[g]);
+                                packs[i]='\0';
+                                i++;
+				return 1;
 			}
 		}
 		inst(packs[i]);
