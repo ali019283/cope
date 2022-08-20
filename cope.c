@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
+#include <libgen.h>
 #include <stdio.h>
 #include <archive.h>
 #include <archive_entry.h>
@@ -91,6 +92,7 @@ int download(char *url, char *destination){
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, download_write_data);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, output);
+		printf("\x1b[31m>>>\x1b[33m Downloading %s...\x1b[0m\n", destination);
 		result = curl_easy_perform(curl);
 		curl_easy_cleanup(curl);
 		fclose(output);
@@ -98,6 +100,41 @@ int download(char *url, char *destination){
 	}
 
 	return 0;
+}
+int is(int i, char s[]);
+int fpc(char *b);
+int inst(char *b);
+int main(int argc, char *argv[]){
+	if(geteuid() != 0)
+        {
+            puts("This program needs root privileges, exiting.");
+            exit(0);
+        }
+    char opt = argc > 1 ? argv[1][0] : ' ';
+	char *temp_dir = "/root/.cache/pk/";
+	chdir(temp_dir);
+	switch (opt) {
+        case 'd':
+			printf("\x1b[31m>>>\x1b[33m Packages that will be installed:\x1b[0m \n");
+			for (int a = 2; a < argc; a++){
+                                fpc(argv[a]);
+                                inst(argv[a]);
+			}
+			return 0;
+		case 'u':
+                        printf("\x1b[31m>>> \x1b[33m Packages that will be removed:\x1b[0m \n");
+        	        for(int a = 2; a < argc; a++){
+				printf("\x1b[31m>>> \x1b[0m %s \n", argv[a]);
+                        }
+			for (int a = 2; a < argc ; a++){	
+				char *package;
+				package=argv[a];
+				char remove[120];
+				sprintf(remove, "/var/db/rp/%s/uninstall", package);
+				system(remove);
+			}
+		return 0;
+	}
 }
 int is(int i, char s[]){
 	s[strlen(s) - 1] = '\0';
@@ -153,48 +190,17 @@ int inst(char *b){
 		printf("\x1b[31m>>>\x1b[33m Can't find package '%s', skiping\x1b[0m\n", b);
 		return 1;
 	}
-	fgets(str, 120, fptr);
+    fgets(str, 120, fptr);
+    char base[120];
+	strcpy(base, basename(str));
+	if(base[strlen(base)-1] == '\n'){base[strlen(base)-1]='\0'; str[strlen(str)-1]='\0';}
+	char packbas[120];strcpy(packbas, base);
+	download(str, base);
+	printf("\x1b[31m>>>\x1b[33m Extracting %s...\x1b[0m\n", packbas);
+	extract(packbas);
+	while(fgets(str, 120, fptr)!=NULL){strcpy(base, basename(str)); if(base[strlen(base)-1] == '\n') {base[strlen(base)-1]='\0'; str[strlen(str)-1]='\0';} download(str, base);}
 	fclose(fptr);
-	char arg[120];
-	snprintf(arg, "%s", b);
-	strncpy(buf, arg, 60);
-	strcat(arg, ".tar");
-	package=arg;
-	download(str, package);
-	extract(package);
 	system(build);
 	mkdir(ins_pkg, 0777);
 	return 0;
-}
-int main(int argc, char *argv[]){
-	if(geteuid() != 0)
-        {
-            puts("This program needs root privileges, exiting.");
-            exit(0);
-        }
-    char opt = argc > 1 ? argv[1][0] : ' ';
-	char *temp_dir = "/root/.cache/pk/";
-	chdir(temp_dir);
-	switch (opt) {
-        case 'd':
-			printf("\x1b[31m>>>\x1b[33m Packages that will be installed:\x1b[0m \n");
-			for (int a = 2; a < argc; a++){
-                                fpc(argv[a]);
-                                inst(argv[a]);
-			}
-			return 0;
-		case 'u':
-                        printf("\x1b[31m>>> \x1b[33m Packages that will be removed:\x1b[0m \n");
-        	        for(int a = 2; a < argc; a++){
-				printf("\x1b[31m>>> \x1b[0m %s \n", argv[a]);
-                        }
-			for (int a = 2; a < argc ; a++){	
-				char *package;
-				package=argv[a];
-				char remove[120];
-				sprintf(remove, "/var/db/rp/%s/uninstall", package);
-				system(remove);
-			}
-		return 0;
-	}
 }
