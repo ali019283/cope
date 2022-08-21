@@ -126,12 +126,14 @@ int main(int argc, char *argv[]){
         	        for(int a = 2; a < argc; a++){
 				printf("\x1b[31m>>> \x1b[0m %s \n", argv[a]);
                         }
-			for (int a = 2; a < argc ; a++){	
-				char *package;
+			for (int a = 2; a < argc ; a++){		
+                                char *package;
 				package=argv[a];
-				char remove[120];
-				sprintf(remove, "/var/db/rp/%s/uninstall", package);
-				system(remove);
+				char rm[120];
+				sprintf(rm, "/var/db/rp/%s/files", package);
+				FILE *fptr = fopen(rm, "r");
+                                char s[120];
+				while(fgets(s, 120, fptr)){if(s[strlen(s)-1] == '\n'){s[strlen(s)-1]='\0';} remove(s);}
 			}
 		return 0;
 	}
