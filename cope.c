@@ -148,7 +148,6 @@ int main(int argc, char *argv[]){
                       int i=0;
                       FILE *kkk=fopen("/var/db/rp/world", "r");
                       int l=cifi(fopen("/var/db/rp/world", "r"), argv[a]);
-                      printf(" asdasdas das %d", l);
                       while(fgets(sjk, 120, kkk) != NULL){
                               i++;
                               if(l==i){
