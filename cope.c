@@ -101,7 +101,7 @@ int download(char *url, char *destination){
 	return 0;
 }
 int is(int i, char s[]);
-int fpc(char *b);
+int fpc(char *b, int kl);
 int inst(char *b);
 int cifi(FILE *ok, char *s[]);
 int main(int argc, char *argv[]){
@@ -117,7 +117,7 @@ int main(int argc, char *argv[]){
         case 'd':
 	      printf("\x1b[32m>>>\x1b[36m Packages that will be installed:\x1b[0m \n");
 	      for (int a = 2; a < argc; a++){
-                      fpc(argv[a]);
+                      fpc(argv[a], 1);
                       if(inst(argv[a])==0){
                               char kk[120];
                               snprintf(kk, "%s", argv[a]);
@@ -165,27 +165,10 @@ int main(int argc, char *argv[]){
 	}
 }
 int is(int i, char s[]){
-	for (int y=0; y < strlen(packs); y++) {
-		if(packs[y] == s){ 
-		        return 0;
-		}
-	}
 	packs[i]=s;
-	for (int g=0; g < strlen(packs); g++){
-		if (packs[g]==NULL){
-                        fpc(packs[i]);
-                        inst(packs[i]);
-			return 0;
-		}
-		if(!strcmp(packs[i], packs[g])){
-			fpc(packs[g]);
-                        inst(packs[g]);
-                        packs[i]="0";
-			return 1;
-		}
-	}
-        fpc(packs[i]);
+        fpc(packs[i], 0);
 	inst(packs[i]);
+	return 0;
 }
 int cifi(FILE *ok, char *s[]){
         char k[120];
@@ -202,13 +185,10 @@ int cifi(FILE *ok, char *s[]){
         fclose(ok);
         return 0;
 }
-int fpc(char *b){
-	static int n=-1;
-        n++;
-        if(n % 2){
-                sprintf(pac, "%s", b);
-        }
-        char depend[120];
+int fpc(char *b, int kl){
+        strcat(pac, b);
+	puts(b); printf("%s", pac);
+	char depend[120];
 	sprintf(depend, "/var/db/rp/%s/depends", b);
 	char s[120];
 	printf("\x1b[32m>>>\x1b[0m %s\n", b);
@@ -220,10 +200,17 @@ int fpc(char *b){
         FILE *ok=fopen("/var/db/rp/world", "r");
 	for (int i = strlen(packs); fgets(s, 120, dep); i++){
                 s[strlen(s)-1]='\0';
-                if(strcmp(pac, s) == 0){
-                        printf("\x1b[33m>>>\x1b[31m Circular dependency detected while installing %s, exiting cycle\x1b[0m\n", s);
-                        return 0;
-                }
+		char kk[120]="";
+		if(kl==0){
+			for(int i = 0; i<=strlen(pac)-strlen(s); i++){
+				strncpy(kk, pac+i, strlen(s));
+				printf("%s  %s\n", kk, s); 
+				if(strcmp(kk ,s)==0){
+					printf("\x1b[33m>>>\x1b[31m Circular dependency detected while installing %s, exiting cycle\x1b[0m\n", s);
+					return 0;
+				}
+			}
+		}
                 if(cifi(ok,s)==0){
                         is(i, s);
                 }else{
