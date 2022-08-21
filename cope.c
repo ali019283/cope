@@ -8,6 +8,7 @@
 #include <archive.h>
 #include <archive_entry.h>
 char *packs[240];
+char pac[120];
 int copy_data(struct archive *ar, struct archive *aw){
 	int r;
 	const void *buff;
@@ -106,7 +107,7 @@ int cifi(FILE *ok, char *s[]);
 int main(int argc, char *argv[]){
 	if(geteuid() != 0)
         {
-            printf("\x1b[33m>>>\x1b[31m This program needs rooot privilages, exiting\x1b[0m\n");
+            printf("\x1b[33m>>>\x1b[31m This program needs root privilages, exiting\x1b[0m\n");
             exit(0);
         }
     char opt = argc > 1 ? argv[1][0] : ' ';
@@ -202,7 +203,12 @@ int cifi(FILE *ok, char *s[]){
         return 0;
 }
 int fpc(char *b){
-	char depend[120];
+	static int n=-1;
+        n++;
+        if(n % 2){
+                sprintf(pac, "%s", b);
+        }
+        char depend[120];
 	sprintf(depend, "/var/db/rp/%s/depends", b);
 	char s[120];
 	printf("\x1b[32m>>>\x1b[0m %s\n", b);
@@ -214,6 +220,10 @@ int fpc(char *b){
         FILE *ok=fopen("/var/db/rp/world", "r");
 	for (int i = strlen(packs); fgets(s, 120, dep); i++){
                 s[strlen(s)-1]='\0';
+                if(strcmp(pac, s) == 0){
+                        printf("\x1b[33m>>>\x1b[31m Circular dependency detected while installing %s, exiting cycle\x1b[0m\n", s);
+                        return 0;
+                }
                 if(cifi(ok,s)==0){
                         is(i, s);
                 }else{
