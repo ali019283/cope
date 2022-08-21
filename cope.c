@@ -83,7 +83,6 @@ int download(char *url, char *destination){
 	FILE *output;
 	CURLcode result;
 	CURL *curl = curl_easy_init();
-
 	if (curl) {
 		output = fopen(destination, "wb");
 		if (output == NULL)
@@ -98,12 +97,12 @@ int download(char *url, char *destination){
 		fclose(output);
 		return 1;
 	}
-
 	return 0;
 }
 int is(int i, char s[]);
 int fpc(char *b);
 int inst(char *b);
+int cifi(FILE *ok, char *s[]);
 int main(int argc, char *argv[]){
 	if(geteuid() != 0)
         {
@@ -118,7 +117,14 @@ int main(int argc, char *argv[]){
 	      printf("\x1b[32m>>>\x1b[36m Packages that will be installed:\x1b[0m \n");
 	      for (int a = 2; a < argc; a++){
                       fpc(argv[a]);
-                      inst(argv[a]);
+                      if(inst(argv[a])==0){
+                              char kk[120];
+                              snprintf(kk, "%s", argv[a]);
+                              if(cifi(fopen("/var/db/rp/world", "r"), kk) == 0){
+                                      FILE *ok=fopen("/var/db/rp/world", "a");
+                                      fprintf(ok, "%s\n", argv[a]); fclose(ok);
+                              }
+                      }
 	      }
 	      return 0;
 	case 'u':
@@ -137,14 +143,28 @@ int main(int argc, char *argv[]){
                               if(s[strlen(s)-1] == '\n'){
                                       s[strlen(s)-1]='\0';
                               }remove(s);
-                      }
+                      }char jk[120];
+                      char sjk[120];
+                      int i=0;
+                      FILE *kkk=fopen("/var/db/rp/world", "r");
+                      int l=cifi(fopen("/var/db/rp/world", "r"), argv[a]);
+                      printf(" asdasdas das %d", l);
+                      while(fgets(sjk, 120, kkk) != NULL){
+                              i++;
+                              if(l==i){
+                                      continue;
+                              }
+                              strcat(jk, sjk);
+                      }fclose(kkk);
+                      kkk=fopen("/var/db/rp/world", "w");
+                      fprintf(kkk, jk);
+                      fclose(kkk);
+                      
 	      }
 		return 0;
 	}
 }
 int is(int i, char s[]){
-	s[strlen(s) - 1] = '\0';
-	printf("\x1b[32m>>>\x1b[0m %s\n", s);
 	for (int y=0; y < strlen(packs); y++) {
 		if(packs[y] == s){ 
 		        return 0;
@@ -153,17 +173,34 @@ int is(int i, char s[]){
 	packs[i]=s;
 	for (int g=0; g < strlen(packs); g++){
 		if (packs[g]==NULL){
-		inst(packs[i]);
+                        fpc(packs[i]);
+                        inst(packs[i]);
 			return 0;
 		}
 		if(!strcmp(packs[i], packs[g])){
-			inst(packs[g]);
+			fpc(packs[g]);
+                        inst(packs[g]);
                         packs[i]="0";
 			return 1;
 		}
 	}
+        fpc(packs[i]);
 	inst(packs[i]);
-	fpc(packs[i]);
+}
+int cifi(FILE *ok, char *s[]){
+        char k[120];
+        int j=0;
+        while(fgets(k, 120, ok) !=NULL){
+                j++;
+                if(k[strlen(k)-1]=='\n'){
+                       k[strlen(k)-1]='\0';
+                }
+                if(strcmp(s, k) == 0){
+                        return j;
+                }
+        }
+        fclose(ok);
+        return 0;
 }
 int fpc(char *b){
 	char depend[120];
@@ -175,10 +212,19 @@ int fpc(char *b){
 		printf("\x1b[32m>>>\x1b[35m Package '%s' doesnt have any dependency folder, skiping dependency check\x1b[0m\n", b);
 		return 1;
 	}
+        FILE *ok=fopen("/var/db/rp/world", "r");
 	for (int i = strlen(packs); fgets(s, 120, dep); i++){
-		is(i, s);
+                s[strlen(s)-1]='\0';
+                if(cifi(ok,s)==0){
+                        is(i, s);
+                }else{
+                        printf("\x1b[32m>>>\x1b[36m Dependency %s is already installed, skiping\x1b[0m\n", s);
+                        return 0;
+                }
 	}
 	fclose(dep);
+        ok=fopen("/var/db/rp/world", "a");
+        fprintf(ok, "%s\n", s); fclose(ok);
 	return 0;
 }
 int inst(char *b){
