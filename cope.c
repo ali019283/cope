@@ -92,7 +92,7 @@ int download(char *url, char *destination){
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, download_write_data);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, output);
-		printf("\x1b[31m>>>\x1b[33m Downloading %s...\x1b[0m\n", destination);
+		printf("\x1b[32m>>>\x1b[36m Downloading %s...\x1b[0m\n", destination);
 		result = curl_easy_perform(curl);
 		curl_easy_cleanup(curl);
 		fclose(output);
@@ -107,7 +107,7 @@ int inst(char *b);
 int main(int argc, char *argv[]){
 	if(geteuid() != 0)
         {
-            puts("This program needs root privileges, exiting.");
+            printf("\x1b[33m>>>\x1b[31m This program needs rooot privilages, exiting\x1b[0m\n");
             exit(0);
         }
     char opt = argc > 1 ? argv[1][0] : ' ';
@@ -115,32 +115,36 @@ int main(int argc, char *argv[]){
 	chdir(temp_dir);
 	switch (opt) {
         case 'd':
-			printf("\x1b[31m>>>\x1b[33m Packages that will be installed:\x1b[0m \n");
-			for (int a = 2; a < argc; a++){
-                                fpc(argv[a]);
-                                inst(argv[a]);
-			}
-			return 0;
-		case 'u':
-                        printf("\x1b[31m>>> \x1b[33m Packages that will be removed:\x1b[0m \n");
-        	        for(int a = 2; a < argc; a++){
-				printf("\x1b[31m>>> \x1b[0m %s \n", argv[a]);
-                        }
-			for (int a = 2; a < argc ; a++){		
-                                char *package;
-				package=argv[a];
-				char rm[120];
-				sprintf(rm, "/var/db/rp/%s/files", package);
-				FILE *fptr = fopen(rm, "r");
-                                char s[120];
-				while(fgets(s, 120, fptr)){if(s[strlen(s)-1] == '\n'){s[strlen(s)-1]='\0';} remove(s);}
-			}
+	      printf("\x1b[32m>>>\x1b[36m Packages that will be installed:\x1b[0m \n");
+	      for (int a = 2; a < argc; a++){
+                      fpc(argv[a]);
+                      inst(argv[a]);
+	      }
+	      return 0;
+	case 'u':
+              printf("\x1b[32m>>> \x1b[36m Packages that will be removed:\x1b[0m \n");
+              for(int a = 2; a < argc; a++){
+                      printf("\x1b[32m>>> \x1b[0m %s \n", argv[a]);
+              }
+              for (int a = 2; a < argc ; a++){		
+                      char *package;
+                      package=argv[a];
+		      char rm[120];
+		      sprintf(rm, "/var/db/rp/%s/files", package);
+		      FILE *fptr = fopen(rm, "r");
+                      char s[120];
+		      while(fgets(s, 120, fptr)){
+                              if(s[strlen(s)-1] == '\n'){
+                                      s[strlen(s)-1]='\0';
+                              }remove(s);
+                      }
+	      }
 		return 0;
 	}
 }
 int is(int i, char s[]){
 	s[strlen(s) - 1] = '\0';
-	printf("\x1b[31m>>>\x1b[0m %s\n", s);
+	printf("\x1b[32m>>>\x1b[0m %s\n", s);
 	for (int y=0; y < strlen(packs); y++) {
 		if(packs[y] == s){ 
 		        return 0;
@@ -165,10 +169,10 @@ int fpc(char *b){
 	char depend[120];
 	sprintf(depend, "/var/db/rp/%s/depends", b);
 	char s[120];
-	printf("\x1b[31m>>>\x1b[0m %s\n", b);
+	printf("\x1b[32m>>>\x1b[0m %s\n", b);
 	FILE *dep = fopen(depend, "r");
 	if(dep==NULL){
-		printf("\x1b[31m>>>\x1b[33m Package '%s' doesnt have any dependency folder, skiping dependency check\x1b[0m\n", b);
+		printf("\x1b[32m>>>\x1b[35m Package '%s' doesnt have any dependency folder, skiping dependency check\x1b[0m\n", b);
 		return 1;
 	}
 	for (int i = strlen(packs); fgets(s, 120, dep); i++){
@@ -191,25 +195,37 @@ int inst(char *b){
         sprintf(rm, "/var/db/rp/%s/files", b);
         FILE *fptr = fopen(source, "r");
 	if(fptr==NULL){
-		printf("\x1b[31m>>>\x1b[33m Can't find package '%s', skiping\x1b[0m\n", b);
+		printf("\x1b[33m>>>\x1b[31m Can't find package '%s', skiping\x1b[0m\n", b);
 		return 1;
 	}
         fgets(str, 120, fptr);
         char base[120];
 	strcpy(base, basename(str));
-	if(base[strlen(base)-1] == '\n'){base[strlen(base)-1]='\0'; str[strlen(str)-1]='\0';}
+	if(base[strlen(base)-1] == '\n'){
+                base[strlen(base)-1]='\0'; 
+                str[strlen(str)-1]='\0';
+        }
 	char packbas[120];strcpy(packbas, base);
         download(str, base);
-	printf("\x1b[31m>>>\x1b[33m Extracting %s...\x1b[0m\n", packbas);
-	extract(packbas);
+	printf("\x1b[32m>>>\x1b[36m Extracting %s...\x1b[0m\n", packbas);
+        extract(packbas);
         FILE *ok = fopen(rm, "r");
-        while(fgets(str, 120, ok)!=NULL){if(str[strlen(str)-1]=='\n') str[strlen(str)-1]='\0';}
+        while(fgets(str, 120, ok)!=NULL){
+                if(str[strlen(str)-1]=='\n') 
+                        str[strlen(str)-1]='\0';
+        }fclose(ok);
         char dir[120]="/root/.cache/pk/";
         strcat(dir, str);
-        printf("\x1b[31m>>>\x1b[33m Changing directory to %s\x1b[0m\n", dir);
+        printf("\x1b[32m>>>\x1b[36m Changing directory to %s\x1b[0m\n", dir);
         chdir(dir);
-	while(fgets(str, 120, fptr)!=NULL){strcpy(base, basename(str)); if(base[strlen(base)-1] == '\n') {base[strlen(base)-1]='\0'; str[strlen(str)-1]='\0';} download(str, base);}
-	fclose(fptr);
+	while(fgets(str, 120, fptr)!=NULL){
+                strcpy(base, basename(str)); 
+                      if(base[strlen(base)-1] == '\n'){
+                              base[strlen(base)-1]='\0'; 
+                              str[strlen(str)-1]='\0';
+                      } 
+                download(str, base);
+        }fclose(fptr);
 	system(build);
         chdir("/root/.cache/pk");
 	mkdir(ins_pkg, 0777);
