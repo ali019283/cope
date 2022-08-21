@@ -187,13 +187,15 @@ int inst(char *b){
 	sprintf(source, "/var/db/rp/%s/source", b);
 	char ins_pkg[120];
 	sprintf(ins_pkg, "/var/db/rp/installed/%s", b);
-	FILE *fptr = fopen(source, "r");
+	char rm[120];
+        sprintf(rm, "/var/db/rp/%s/files", b);
+        FILE *fptr = fopen(source, "r");
 	if(fptr==NULL){
 		printf("\x1b[31m>>>\x1b[33m Can't find package '%s', skiping\x1b[0m\n", b);
 		return 1;
 	}
-    fgets(str, 120, fptr);
-    char base[120];
+        fgets(str, 120, fptr);
+        char base[120];
 	strcpy(base, basename(str));
 	if(base[strlen(base)-1] == '\n'){base[strlen(base)-1]='\0'; str[strlen(str)-1]='\0';}
 	char packbas[120];strcpy(packbas, base);
@@ -202,7 +204,14 @@ int inst(char *b){
 	extract(packbas);
 	while(fgets(str, 120, fptr)!=NULL){strcpy(base, basename(str)); if(base[strlen(base)-1] == '\n') {base[strlen(base)-1]='\0'; str[strlen(str)-1]='\0';} download(str, base);}
 	fclose(fptr);
+        FILE *ok = fopen(rm, "r");
+        while(fgets(str, 120, ok)!=NULL){if(str[strlen(str)-1]=='\n') str[strlen(str)-1]='\0';}
+        char dir[120]="/root/.cache/pk/";
+        strcat(dir, str);
+        puts(dir);
+        chdir(dir);
 	system(build);
+        chdir("/root/.cache/pk");
 	mkdir(ins_pkg, 0777);
 	return 0;
 }
