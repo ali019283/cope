@@ -199,17 +199,17 @@ int inst(char *b){
 	strcpy(base, basename(str));
 	if(base[strlen(base)-1] == '\n'){base[strlen(base)-1]='\0'; str[strlen(str)-1]='\0';}
 	char packbas[120];strcpy(packbas, base);
-	download(str, base);
+        download(str, base);
 	printf("\x1b[31m>>>\x1b[33m Extracting %s...\x1b[0m\n", packbas);
 	extract(packbas);
-	while(fgets(str, 120, fptr)!=NULL){strcpy(base, basename(str)); if(base[strlen(base)-1] == '\n') {base[strlen(base)-1]='\0'; str[strlen(str)-1]='\0';} download(str, base);}
-	fclose(fptr);
         FILE *ok = fopen(rm, "r");
         while(fgets(str, 120, ok)!=NULL){if(str[strlen(str)-1]=='\n') str[strlen(str)-1]='\0';}
         char dir[120]="/root/.cache/pk/";
         strcat(dir, str);
-        puts(dir);
+        printf("\x1b[31m>>>\x1b[33m Changing directory to %s\x1b[0m\n", dir);
         chdir(dir);
+	while(fgets(str, 120, fptr)!=NULL){strcpy(base, basename(str)); if(base[strlen(base)-1] == '\n') {base[strlen(base)-1]='\0'; str[strlen(str)-1]='\0';} download(str, base);}
+	fclose(fptr);
 	system(build);
         chdir("/root/.cache/pk");
 	mkdir(ins_pkg, 0777);
