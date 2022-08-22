@@ -7,8 +7,7 @@
 #include <stdio.h>
 #include <archive.h>
 #include <archive_entry.h>
-char *packs[240];
-char pac[120];
+char pac[240];
 int copy_data(struct archive *ar, struct archive *aw){
 	int r;
 	const void *buff;
@@ -102,7 +101,6 @@ int download(char *url, char *destination){
 }
 int is(int i, char s[]);
 int fpc(char *b, int kl);
-int inst(char *b);
 int cifi(FILE *ok, char *s[]);
 int main(int argc, char *argv[]){
 	if(geteuid() != 0)
@@ -110,7 +108,7 @@ int main(int argc, char *argv[]){
             printf("\x1b[33m>>>\x1b[31m This program needs root privilages, exiting\x1b[0m\n");
             exit(0);
         }
-    char opt = argc > 1 ? argv[1][0] : ' ';
+    	char opt = argc > 1 ? argv[1][0] : ' ';
 	char *temp_dir = "/root/.cache/pk/";
 	chdir(temp_dir);
 	switch (opt) {
@@ -164,12 +162,6 @@ int main(int argc, char *argv[]){
 		return 0;
 	}
 }
-int is(int i, char s[]){
-	packs[i]=s;
-        fpc(packs[i], 0);
-	inst(packs[i]);
-	return 0;
-}
 int cifi(FILE *ok, char *s[]){
         char k[120];
         int j=0;
@@ -187,7 +179,6 @@ int cifi(FILE *ok, char *s[]){
 }
 int fpc(char *b, int kl){
         strcat(pac, b);
-	puts(b); printf("%s", pac);
 	char depend[120];
 	sprintf(depend, "/var/db/rp/%s/depends", b);
 	char s[120];
@@ -198,13 +189,12 @@ int fpc(char *b, int kl){
 		return 1;
 	}
         FILE *ok=fopen("/var/db/rp/world", "r");
-	for (int i = strlen(packs); fgets(s, 120, dep); i++){
+	while (fgets(s, 120, dep)!=NULL){
                 s[strlen(s)-1]='\0';
 		char kk[120]="";
 		if(kl==0){
 			for(int i = 0; i<=strlen(pac)-strlen(s); i++){
 				strncpy(kk, pac+i, strlen(s));
-				printf("%s  %s\n", kk, s); 
 				if(strcmp(kk ,s)==0){
 					printf("\x1b[33m>>>\x1b[31m Circular dependency detected while installing %s, exiting cycle\x1b[0m\n", s);
 					return 0;
@@ -212,7 +202,7 @@ int fpc(char *b, int kl){
 			}
 		}
                 if(cifi(ok,s)==0){
-                        is(i, s);
+			fpc(s, 0); inst(s);
                 }else{
                         printf("\x1b[32m>>>\x1b[36m Dependency %s is already installed, skiping\x1b[0m\n", s);
                         return 0;
