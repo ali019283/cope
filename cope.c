@@ -146,43 +146,43 @@ int main(int argc, char *argv[]){
 }
 int uni(char *st){
         chdir("/root/.cache/pk/");
-              char rm[120];
-              sprintf(rm, "/var/db/rp/%s/files", st);
-              FILE *fptr = fopen(rm, "r");
-              char s[120];
-              while(fgets(s, 120, fptr)){
-                      if(s[strlen(s)-1] == '\n'){
-                              s[strlen(s)-1]='\0';
-                      }
-                      if(access(s, 0) !=0){
-                              printf("\x1b[32m>>>\x1b[36m Package '%s' is not installed\x1b[0m\n", st);
-                              return 0;
-                      }
-                      if(s[strlen(s)-1]!='/'){
-                              unlink(s);
-                              printf("\x1b[32m>>>\x1b[36m Removed file %s\x1b[0m\n", s);
-                      }else{
-                              int uc(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf){
-                                      return remove(fpath);
-                              }
-                              nftw(s, uc, 64, FTW_DEPTH);
-                              printf("\x1b[32m>>>\x1b[36m Removed directory %s\x1b[0m\n", s);
-                      }
-              }char jk[120]="";
-              char sjk[120]="";
-              int i=0;
-              FILE *kkk=fopen("/var/db/rp/world", "r");
-              int l=cifi(fopen("/var/db/rp/world", "r"), st);
-              while(fgets(sjk, 120, kkk) != NULL){
-                      i++;
-                      if(l==i){
-                              continue;
-                      }
-                      strcat(jk, sjk);
-              }fclose(kkk);
-              kkk=fopen("/var/db/rp/world", "w");
-              fprintf(kkk, jk);
-              fclose(kkk);
+        char rm[120];
+        sprintf(rm, "/var/db/rp/%s/files", st);
+        FILE *fptr = fopen(rm, "r");
+        char s[120];
+        while(fgets(s, 120, fptr)){
+                if(s[strlen(s)-1] == '\n'){
+                        s[strlen(s)-1]='\0';
+                }
+                if(access(s, 0) !=0){
+                        printf("\x1b[32m>>>\x1b[36m Package '%s' is not installed\x1b[0m\n", st);
+                        return 0;
+                }
+                if(s[strlen(s)-1]!='/'){
+                        unlink(s);
+                        printf("\x1b[32m>>>\x1b[36m Removed file %s\x1b[0m\n", s);
+                }else{
+                        int uc(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf){
+                                return remove(fpath);
+                        }
+                        nftw(s, uc, 64, FTW_DEPTH);
+                        printf("\x1b[32m>>>\x1b[36m Removed directory %s\x1b[0m\n", s);
+                }
+        }char jk[120]="";
+        char sjk[120]="";
+        int i=0;
+        FILE *kkk=fopen("/var/db/rp/world", "r");
+        int l=cifi(fopen("/var/db/rp/world", "r"), st);
+        while(fgets(sjk, 120, kkk) != NULL){
+                i++;
+                if(l==i){
+                        continue;
+                }
+                strcat(jk, sjk);
+        }fclose(kkk);
+        kkk=fopen("/var/db/rp/world", "w");
+        fprintf(kkk, jk);
+        fclose(kkk);
 }
 int cifi(FILE *ok, char *s[]){
         char k[120];
