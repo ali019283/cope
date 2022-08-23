@@ -1,9 +1,11 @@
+#define _XOPEN_SOURCE 500
 #include <sys/stat.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
 #include <libgen.h>
+#include <ftw.h>
 #include <stdio.h>
 #include <archive.h>
 #include <archive_entry.h>
@@ -127,10 +129,11 @@ int main(int argc, char *argv[]){
 	      }
 	      return 0;
 	case 'u':
-              printf("\x1b[32m>>> \x1b[36m Packages that will be removed:\x1b[0m \n");
+              printf("\x1b[32m>>>\x1b[36m Packages that will be removed:\x1b[0m \n");
               for(int a = 2; a < argc; a++){
-                      printf("\x1b[32m>>> \x1b[0m %s \n", argv[a]);
+                      printf("\x1b[32m>>>\x1b[0m %s \n", argv[a]);
               }
+              chdir("/root/.cache/pk/");
               for (int a = 2; a < argc ; a++){		
                       char *package;
                       package=argv[a];
@@ -141,7 +144,21 @@ int main(int argc, char *argv[]){
 		      while(fgets(s, 120, fptr)){
                               if(s[strlen(s)-1] == '\n'){
                                       s[strlen(s)-1]='\0';
-                              }remove(s);
+                              }
+                              if(access(s, 0) !=0){
+                                      printf("\x1b[32m>>>\x1b[36m Package is not installed\x1b[0m\n");
+                                      break;
+                              }
+                              if(s[strlen(s)-1]!='/'){
+                                      unlink(s);
+                                      printf("\x1b[32m>>>\x1b[36m Removed file %s\x1b[0m\n", s);
+                              }else{
+                                      int uc(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf){
+                                              return remove(fpath);
+                                      }
+                                     nftw(s, uc, 64, FTW_DEPTH);
+                                     printf("\x1b[32m>>>\x1b[36m Removed directory %s\x1b[0m\n", s);
+                              }
                       }char jk[120];
                       char sjk[120];
                       int i=0;
@@ -214,16 +231,10 @@ int fpc(char *b, int kl){
 	return 0;
 }
 int inst(char *b){
-	char buf[60];
-	char str[120];
-	char *package;
-	char build[120];
+	char buf[60], str[120], hl[120], *package, build[120], source[120], ins_pkg[120], rm[120];
 	sprintf(build, "/var/db/rp/%s/build", b);
-	char source[120];
 	sprintf(source, "/var/db/rp/%s/source", b);
-	char ins_pkg[120];
 	sprintf(ins_pkg, "/var/db/rp/installed/%s", b);
-	char rm[120];
         sprintf(rm, "/var/db/rp/%s/files", b);
         FILE *fptr = fopen(source, "r");
 	if(fptr==NULL){
@@ -238,18 +249,20 @@ int inst(char *b){
                 str[strlen(str)-1]='\0';
         }
 	char packbas[120];strcpy(packbas, base);
-        download(str, base);
+        FILE *ok = fopen(rm, "r");
+        while(fgets(hl, 120, ok)!=NULL){
+                if(hl[strlen(hl)-1]=='\n')
+                        hl[strlen(hl)-1]='\0';
+        }fclose(ok);
+        if(access(hl, 0) == 0){
+                printf("\x1b[32m>>>\x1b[36m Source file was found in cache directory, skiping download\x1b[0m\n");
+        }else{
+                download(str, base);
+        }
 	printf("\x1b[32m>>>\x1b[36m Extracting %s...\x1b[0m\n", packbas);
         extract(packbas);
-        FILE *ok = fopen(rm, "r");
-        while(fgets(str, 120, ok)!=NULL){
-                if(str[strlen(str)-1]=='\n') 
-                        str[strlen(str)-1]='\0';
-        }fclose(ok);
-        char dir[120]="/root/.cache/pk/";
-        strcat(dir, str);
-        printf("\x1b[32m>>>\x1b[36m Changing directory to %s\x1b[0m\n", dir);
-        chdir(dir);
+        printf("\x1b[32m>>>\x1b[36m Changing directory to %s\x1b[0m\n", hl);
+        chdir(hl);
 	while(fgets(str, 120, fptr)!=NULL){
                 strcpy(base, basename(str)); 
                       if(base[strlen(base)-1] == '\n'){
