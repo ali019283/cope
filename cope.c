@@ -102,7 +102,7 @@ int download(char *url, char *destination){
 	return 0;
 }
 int is(int i, char s[]);
-int fpc(char *b, int kl);
+int fpc(char *b, int kl, char *opt);
 int cifi(FILE *ok, char *s[]);
 int main(int argc, char *argv[]){
 	if(geteuid() != 0)
@@ -114,10 +114,11 @@ int main(int argc, char *argv[]){
 	char *temp_dir = "/root/.cache/pk/";
 	chdir(temp_dir);
 	switch (opt) {
+        case 'b':
         case 'd':
 	      printf("\x1b[32m>>>\x1b[36m Packages that will be installed:\x1b[0m \n");
 	      for (int a = 2; a < argc; a++){
-                      fpc(argv[a], 1);
+                      fpc(argv[a], 1, opt);
                       if(inst(argv[a])==0){
                               char kk[120];
                               snprintf(kk, "%s", argv[a]);
@@ -194,7 +195,7 @@ int cifi(FILE *ok, char *s[]){
         fclose(ok);
         return 0;
 }
-int fpc(char *b, int kl){
+int fpc(char *b, int kl, char *opt){
         strcat(pac, b);
 	char depend[120];
 	sprintf(depend, "/var/db/rp/%s/depends", b);
@@ -218,8 +219,8 @@ int fpc(char *b, int kl){
 				}
 			}
 		}
-                if(cifi(ok,s)==0){
-			fpc(s, 0); inst(s);
+                if(cifi(ok,s)==0 || opt=='b'){
+			fpc(s, 0, opt); inst(s);
                 }else{
                         printf("\x1b[32m>>>\x1b[36m Dependency %s is already installed, skiping\x1b[0m\n", s);
                         return 0;
