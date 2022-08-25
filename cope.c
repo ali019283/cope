@@ -20,7 +20,7 @@ int copy_data(struct archive *ar, struct archive *aw){
 		r = archive_read_data_block(ar, &buff, &size, &offset);
 		if (r == ARCHIVE_EOF)
 			return (ARCHIVE_OK);
-		if (r < ARCHIVE_OK)
+		if (r < ARCHIVE_OK) 
 			return (r);
 		r = archive_write_data_block(aw, buff, size, offset);
 		if (r < ARCHIVE_OK) {
@@ -29,8 +29,8 @@ int copy_data(struct archive *ar, struct archive *aw){
 		}
 	}
 }
-static void extract(const char *filename){
-	struct archive *a;
+static char *extract(const char *filename){
+        struct archive *a;
 	struct archive *ext;
 	struct archive_entry *entry;
 	int flags;
@@ -40,15 +40,16 @@ static void extract(const char *filename){
 	flags |= ARCHIVE_EXTRACT_ACL;
 	flags |= ARCHIVE_EXTRACT_FFLAGS;
 	a = archive_read_new();
-	archive_read_support_format_all(a);
+        archive_read_support_format_all(a);
 	archive_read_support_compression_all(a);
 	ext = archive_write_disk_new();
 	archive_write_disk_set_options(ext, flags);
 	archive_write_disk_set_standard_lookup(ext);
 	if ((r = archive_read_open_filename(a, filename, 10240)))
 		exit(1);
-	for (;;) {
-		r = archive_read_next_header(a, &entry);
+	r = archive_read_next_header(a, &entry);
+        char *sg=strdup(archive_entry_pathname(entry));
+        for (;;) {
 		if (r == ARCHIVE_EOF)
 			break;
 		if (r < ARCHIVE_OK)
@@ -60,7 +61,7 @@ static void extract(const char *filename){
 			fprintf(stderr, "%s\n", archive_error_string(ext));
 		else if (archive_entry_size(entry) > 0) {
 			r = copy_data(a, ext);
-			if (r < ARCHIVE_OK)
+                        if (r < ARCHIVE_OK)
 				fprintf(stderr, "%s\n", archive_error_string(ext));
 			if (r < ARCHIVE_WARN)
 				exit(1);
@@ -70,11 +71,13 @@ static void extract(const char *filename){
 			fprintf(stderr, "%s\n", archive_error_string(ext));
 		if (r < ARCHIVE_WARN)
 			exit(1);
-	}
+	        r = archive_read_next_header(a, &entry);
+        }
 	archive_read_close(a);
 	archive_read_free(a);
 	archive_write_close(ext);
 	archive_write_free(ext);
+        return sg;
 }
 int download_write_data(void *pointer, size_t size, size_t nmemb, FILE *stream){
 	size_t written = fwrite(pointer, size, nmemb, stream);
@@ -158,16 +161,8 @@ int uni(char *st){
                         printf("\x1b[32m>>>\x1b[36m Package '%s' is not installed\x1b[0m\n", st);
                         return 0;
                 }
-                if(s[strlen(s)-1]!='/'){
-                        unlink(s);
-                        printf("\x1b[32m>>>\x1b[36m Removed file %s\x1b[0m\n", s);
-                }else{
-                        int uc(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf){
-                                return remove(fpath);
-                        }
-                        nftw(s, uc, 64, FTW_DEPTH);
-                        printf("\x1b[32m>>>\x1b[36m Removed directory %s\x1b[0m\n", s);
-                }
+                remove(s);
+                printf("\x1b[32m>>>\x1b[36m Removed file %s\x1b[0m\n", s);
         }char jk[120]="";
         char sjk[120]="";
         int i=0;
@@ -243,11 +238,10 @@ int fpc(char *b, int kl, char *opt){
 	return 0;
 }
 int inst(char *b){
-	char buf[60], str[120], hl[120], *package, build[120], source[120], ins_pkg[120], rm[120];
+	char buf[60], str[120], *package, build[120], source[120], ins_pkg[120];
 	sprintf(build, "/var/db/rp/%s/build", b);
 	sprintf(source, "/var/db/rp/%s/source", b);
 	sprintf(ins_pkg, "/var/db/rp/installed/%s", b);
-        sprintf(rm, "/var/db/rp/%s/files", b);
         FILE *fptr = fopen(source, "r");
 	if(fptr==NULL){
 		printf("\x1b[33m>>>\x1b[31m Can't find package '%s', skiping\x1b[0m\n", b);
@@ -261,20 +255,15 @@ int inst(char *b){
                 str[strlen(str)-1]='\0';
         }
 	char packbas[120];strcpy(packbas, base);
-        FILE *ok = fopen(rm, "r");
-        while(fgets(hl, 120, ok)!=NULL){
-                if(hl[strlen(hl)-1]=='\n')
-                        hl[strlen(hl)-1]='\0';
-        }fclose(ok);
-        if(access(hl, 0) == 0){
+        if(access(base, 0) == 0){
                 printf("\x1b[32m>>>\x1b[36m Source file was found in cache directory, skiping download\x1b[0m\n");
         }else{
                 download(str, base);
         }
 	printf("\x1b[32m>>>\x1b[36m Extracting %s...\x1b[0m\n", packbas);
-        extract(packbas);
-        printf("\x1b[32m>>>\x1b[36m Changing directory to %s\x1b[0m\n", hl);
-        chdir(hl);
+        char *gh=extract(packbas);
+        printf("\x1b[32m>>>\x1b[36m Changing directory to %s\x1b[0m\n", gh);
+        chdir(gh);
 	while(fgets(str, 120, fptr)!=NULL){
                 strcpy(base, basename(str)); 
                       if(base[strlen(base)-1] == '\n'){
