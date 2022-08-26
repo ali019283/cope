@@ -1,5 +1,6 @@
 #define _XOPEN_SOURCE 500
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -148,12 +149,18 @@ int main(int argc, char *argv[]){
         }
 }
 int uni(char *st){
-        chdir("/root/.cache/pk/");
         char rm[120];
-        sprintf(rm, "/var/db/rp/%s/files", st);
+        sprintf(rm, "/var/db/rp/%s/manifest", st);
         FILE *fptr = fopen(rm, "r");
-        char s[120];
-        while(fgets(s, 120, fptr)){
+        char s[120], ff[120][120];
+        int o=0;
+        while(fgets(s, 120, fptr)!=NULL){
+                strcpy(ff[o], s);
+                o++;
+        }
+        while(o>0){
+                o--;
+                strcpy(s, ff[o]);
                 if(s[strlen(s)-1] == '\n'){
                         s[strlen(s)-1]='\0';
                 }
@@ -162,8 +169,8 @@ int uni(char *st){
                         return 0;
                 }
                 remove(s);
-                printf("\x1b[32m>>>\x1b[36m Removed file %s\x1b[0m\n", s);
-        }char jk[120]="";
+        }printf("\x1b[32m>>>\x1b[36m Removed %s\n\x1b[0m", st);
+        char jk[120]="";
         char sjk[120]="";
         int i=0;
         FILE *kkk=fopen("/var/db/rp/world", "r");
@@ -238,10 +245,11 @@ int fpc(char *b, int kl, char *opt){
 	return 0;
 }
 int inst(char *b){
-	char buf[60], str[120], *package, build[120], source[120], ins_pkg[120];
+	char buf[60], str[120], *package, build[120], source[120], ins_pkg[120], mani[120];
 	sprintf(build, "/var/db/rp/%s/build", b);
 	sprintf(source, "/var/db/rp/%s/source", b);
 	sprintf(ins_pkg, "/var/db/rp/installed/%s", b);
+        sprintf(mani, "/var/db/rp/%s/manifest", b);
         FILE *fptr = fopen(source, "r");
 	if(fptr==NULL){
 		printf("\x1b[33m>>>\x1b[31m Can't find package '%s', skiping\x1b[0m\n", b);
@@ -262,6 +270,8 @@ int inst(char *b){
         }
 	printf("\x1b[32m>>>\x1b[36m Extracting %s...\x1b[0m\n", packbas);
         char *gh=extract(packbas);
+        mkdir("/root/.cache/pk/pkg_dir", 0700);
+        setenv("DESTDIR", "/root/.cache/pk/pkg_dir", 1);
         printf("\x1b[32m>>>\x1b[36m Changing directory to %s\x1b[0m\n", gh);
         chdir(gh);
 	while(fgets(str, 120, fptr)!=NULL){
@@ -274,6 +284,26 @@ int inst(char *b){
         }fclose(fptr);
 	system(build);
         chdir("/root/.cache/pk");
-	mkdir(ins_pkg, 0777);
+        remove(mani); open(mani, O_RDWR | O_CREAT, S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR);
+        FILE *man=fopen(mani, "a");
+        int manif(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
+                if(typeflag == FTW_D){
+                        fprintf(man, "%s/\n", fpath+23);
+                        mkdir(fpath+23, 0700);
+                        return 0;
+                }
+                int in=open(fpath, O_RDONLY), ou=creat(fpath+23, 0660);
+                off_t by = 0;
+                struct stat fi = {0};
+                fstat(in, &fi);
+                sendfile(ou, in, &by, fi.st_size);
+                chmod(fpath+23, fi.st_mode);
+                close(ou); close(in);
+                fprintf(man, "%s\n", fpath+23); 
+                return 0;
+        }int rme(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf){return remove(fpath);}
+        nftw("/root/.cache/pk/pkg_dir",manif,64, 0); nftw("/root/.cache/pk/pkg_dir",rme,64, FTW_DEPTH);
+	fclose(man);
+        mkdir(ins_pkg, 0777);
 	return 0;
 }
