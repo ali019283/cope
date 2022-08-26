@@ -286,12 +286,15 @@ int inst(char *b){
         chdir("/root/.cache/pk");
         remove(mani); open(mani, O_RDWR | O_CREAT, S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR);
         FILE *man=fopen(mani, "a");
+        printf("\x1b[32m>>>\x1b[36m Generating manifest...\x1b[0m\n");
         int manif(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
                 if(typeflag == FTW_D){
                         fprintf(man, "%s/\n", fpath+23);
                         mkdir(fpath+23, 0700);
+                        printf("\x1b[32m>>>\x1b[0m %s/\n", fpath+23);
                         return 0;
                 }
+                printf("\x1b[32m>>>\x1b[0m %s\n", fpath+23);
                 int in=open(fpath, O_RDONLY), ou=creat(fpath+23, 0660);
                 off_t by = 0;
                 struct stat fi = {0};
@@ -305,5 +308,6 @@ int inst(char *b){
         nftw("/root/.cache/pk/pkg_dir",manif,64, 0); nftw("/root/.cache/pk/pkg_dir",rme,64, FTW_DEPTH);
 	fclose(man);
         mkdir(ins_pkg, 0777);
+        printf("\x1b[32m>>>\x1b[36m Succesfully installed %s\x1b[0m\n", b);
 	return 0;
 }
