@@ -105,6 +105,7 @@ int download(char *url, char *destination){
 	}
 	return 0;
 }
+int inst(char *b);
 int is(int i, char s[]);
 int fpc(char *b, int kl, char *opt);
 int cifi(FILE *ok, char *s[]);
@@ -126,7 +127,7 @@ int main(int argc, char *argv[]){
                       fpc(argv[a], 1, opt);
                       if(inst(argv[a])==0){
                               char kk[120];
-                              snprintf(kk, "%s", argv[a]);
+                              snprintf(kk, "%s", "%s", argv[a]);
                               if(cifi(fopen("/var/db/rp/world", "r"), kk) == 0){
                                       FILE *ok=fopen("/var/db/rp/world", "a");
                                       fprintf(ok, "%s\n", argv[a]); fclose(ok);
@@ -183,8 +184,9 @@ int uni(char *st){
                 strcat(jk, sjk);
         }fclose(kkk);
         kkk=fopen("/var/db/rp/world", "w");
-        fprintf(kkk, jk);
+        fprintf(kkk, "%s", jk);
         fclose(kkk);
+        return 0;
 }
 int cifi(FILE *ok, char *s[]){
         char k[120];
@@ -287,7 +289,7 @@ int inst(char *b){
         remove(mani); open(mani, O_RDWR | O_CREAT, S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR);
         FILE *man=fopen(mani, "a");
         printf("\x1b[32m>>>\x1b[36m Generating manifest...\x1b[0m\n");
-        int manif(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
+        int manif(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf){
                 if(typeflag == FTW_D){
                         fprintf(man, "%s/\n", fpath+23);
                         mkdir(fpath+23, 0700);
