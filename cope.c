@@ -292,7 +292,7 @@ int inst(char *b){
         int manif(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf){
                 if(typeflag == FTW_D){
                         fprintf(man, "%s/\n", fpath+23);
-                        mkdir(fpath+23, 0700);
+                        mkdir(fpath+23, 0755);
                         printf("\x1b[32m>>>\x1b[0m %s/\n", fpath+23);
                         return 0;
                 }
