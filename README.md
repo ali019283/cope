@@ -1,7 +1,7 @@
 # cope
 cope is a minimal package manager.
 
-dont expect much out of it, it may lack some important features and it may have bugs.
+don't expect much out of it, it may lack some important features and it may have bugs.
 
 # how to use
 ```
@@ -27,7 +27,7 @@ run
 ```
 to install
 
-dont forget to run 
+don't forget to run 
 ```
 # cd /var/db
 # git clone https://github.com/ali019283/rp
