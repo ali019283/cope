@@ -86,6 +86,19 @@ int download_write_data(void *pointer, size_t size, size_t nmemb, FILE *stream){
 }
 
 int download(char *url, char *destination){
+        char *isgit = &url[strlen(url)-4];
+        if(strcmp(isgit, ".git") == 0){
+                printf("\x1b[32m>>>\x1b[36m Downloading git source %s...\x1b[0m\n", url);
+                char turl[480]="git clone --depth=1 ";
+                strcat(turl, url);
+                char * const k = strrchr(url, '.');
+                *k = '\0'; char *kol = strrchr(url, '/'); 
+                int rme(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf){return remove(fpath);}
+                if(access(kol + 1, 0) == 0)
+                        nftw(kol + 1, rme, 64, FTW_DEPTH);
+                system(turl);
+                return 2;
+        }
 	FILE *output;
 	CURLcode result;
 	CURL *curl = curl_easy_init();
@@ -265,13 +278,21 @@ int inst(char *b){
                 str[strlen(str)-1]='\0';
         }
 	char packbas[120];strcpy(packbas, base);
+        char *isgit = &packbas[strlen(packbas)-4]; if(strcmp(isgit, ".git")==0){
+                packbas[strlen(packbas)-4] = '\0';
+        }
+        puts(packbas);
+        char *gh=packbas;
+        int lop;
         if(access(base, 0) == 0){
                 printf("\x1b[32m>>>\x1b[36m Source file was found in cache directory, skiping download\x1b[0m\n");
         }else{
-                download(str, base);
+                lop = download(str, base);
         }
-	printf("\x1b[32m>>>\x1b[36m Extracting %s...\x1b[0m\n", packbas);
-        char *gh=extract(packbas);
+        if(lop != 2){
+                printf("\x1b[32m>>>\x1b[36m Extracting %s...\x1b[0m\n", packbas);
+                gh=extract(packbas);
+        }
         mkdir("/root/.cache/pk/pkg_dir", 0700);
         setenv("DESTDIR", "/root/.cache/pk/pkg_dir", 1);
         printf("\x1b[32m>>>\x1b[36m Changing directory to %s\x1b[0m\n", gh);
