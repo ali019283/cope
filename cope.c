@@ -281,7 +281,6 @@ int inst(char *b){
         char *isgit = &packbas[strlen(packbas)-4]; if(strcmp(isgit, ".git")==0){
                 packbas[strlen(packbas)-4] = '\0';
         }
-        puts(packbas);
         char *gh=packbas;
         int lop;
         if(access(base, 0) == 0){
