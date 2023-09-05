@@ -7,10 +7,13 @@ don't expect much out of it, it may lack some important features and it may have
 ```
 +-------------------------------------------------------------------+
 | -> cope           [d|b|r|s] [pkg]...                              |
-| -> d              Install Packages                                |
+| -> d              install packages                                |
 | -> b              d but force install dependency tree             |
-| -> r              Remove packages                                 |
+| -> f              d but ignore install dependency tree            |
+| -> r              remove packages                                 |
 | -> s              r but ignore dependencies                       |
+| -> l              list installed packages                         |
+| -> u              update repo                                     |
 +-------------------------------------------------------------------+
 ```
 

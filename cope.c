@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
+#include <sys/sendfile.h>
 #include <libgen.h>
 #include <ftw.h>
 #include <stdio.h>
@@ -312,6 +313,17 @@ int main(int argc, char *argv[]){
                         printf("\x1b[32m>>>\x1b[36m Packages that will be installed:\x1b[0m \n");
                         for (int a = 2; a < argc; a++){
                                 fpc(argv[a], 1, opt);
+                                if(inst(argv[a])==0){
+                                        if(cifi(fopen("/var/db/rp/world", "r"), argv[a]) == 0){
+                                                FILE *ok=fopen("/var/db/rp/world", "a");
+                                                fprintf(ok, "%s\n", argv[a]); fclose(ok);
+                                        }
+                                }
+                        }
+                        exit(0);
+                case 'f':
+                        printf("\x1b[32m>>>\x1b[36m Packages that will be installed:\x1b[0m \n");
+                        for (int a = 2; a < argc; a++){
                                 if(inst(argv[a])==0){
                                         if(cifi(fopen("/var/db/rp/world", "r"), argv[a]) == 0){
                                                 FILE *ok=fopen("/var/db/rp/world", "a");
