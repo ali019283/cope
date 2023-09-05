@@ -137,6 +137,10 @@ int uni(char *st){
         char rm[120];
         sprintf(rm, "/var/db/rp/%s/manifest", st);
         FILE *fptr = fopen(rm, "r");
+        if(fptr==NULL){
+		printf("\x1b[33m>>>\x1b[31m Can't find package '%s' to remove, skiping\x1b[0m\n", st);
+		return 1;
+	}
         char s[120], ff[120][120];
         int o=0;
         while(fgets(s, 120, fptr)!=NULL){
@@ -180,7 +184,7 @@ int inst(char *b){
         sprintf(mani, "/var/db/rp/%s/manifest", b);
         FILE *fptr = fopen(source, "r");
 	if(fptr==NULL){
-		printf("\x1b[33m>>>\x1b[31m Can't find package '%s', skiping\x1b[0m\n", b);
+		printf("\x1b[33m>>>\x1b[31m Can't find package '%s' to install, skiping\x1b[0m\n", b);
 		return 1;
 	}
         fgets(str, 120, fptr);
@@ -305,7 +309,6 @@ int main(int argc, char *argv[]){
 	switch (opt) {
                 case 'b':
                 case 'd':
-                        //if (access(fname, F_OK) == 0) {
                         printf("\x1b[32m>>>\x1b[36m Packages that will be installed:\x1b[0m \n");
                         for (int a = 2; a < argc; a++){
                                 fpc(argv[a], 1, opt);
