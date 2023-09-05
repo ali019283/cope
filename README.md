@@ -6,7 +6,7 @@ don't expect much out of it, it may lack some important features and it may have
 # how to use
 ```
 +-------------------------------------------------------------------+
-| -> cope           [d|b|r|s] [pkg]...                              |
+| -> cope           [d|b|f|r|s|l|u] [pkg]...                        |
 | -> d              install packages                                |
 | -> b              d but force install dependency tree             |
 | -> f              d but ignore install dependency tree            |
