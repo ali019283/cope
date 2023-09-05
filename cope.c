@@ -275,10 +275,14 @@ int fpc(char *b, int kl, char opt){
                         uni(s); 
                         fclose(dep); 
                         return 0;
-                }
-                if(cifi(ok,s)==0 || opt=='b'){
+                }else if(cifi(ok,s)==0){
 			fpc(s, 0, opt); 
                         inst(s);
+                }else if(opt=='b'){
+			fpc(s, 0, opt); 
+                        inst(s);
+                        fclose(dep);
+                        return 0;
                 }else{
                         printf("\x1b[32m>>>\x1b[36m Dependency %s is already installed, skiping\x1b[0m\n", s);
                         return 0;
@@ -299,32 +303,45 @@ int main(int argc, char *argv[]){
 	char *temp_dir = "/root/.cache/pk/";
 	chdir(temp_dir);
 	switch (opt) {
-        case 'b':
-        case 'd':
-	      printf("\x1b[32m>>>\x1b[36m Packages that will be installed:\x1b[0m \n");
-	      for (int a = 2; a < argc; a++){
-                      fpc(argv[a], 1, opt);
-                      if(inst(argv[a])==0){
-                              char kk[120];
-                              snprintf(kk, "%s", "%s", argv[a]);
-                              if(cifi(fopen("/var/db/rp/world", "r"), kk) == 0){
-                                      FILE *ok=fopen("/var/db/rp/world", "a");
-                                      fprintf(ok, "%s\n", argv[a]); fclose(ok);
-                              }
-                      }
-	      }
-	      return 0;
-        case 's':
-        case 'r':
-              printf("\x1b[32m>>>\x1b[36m Packages that will be removed:\x1b[0m \n");
-              for (int a = 2; a < argc; a++){
-                    if(opt!='s'){
-                            fpc(argv[a], 2, opt);
-                    }else{
-                            printf("\x1b[32m>>>\x1b[0m %s\n", argv[a]);
-                    }
-                    uni(argv[a]);
-              }
-	      return 0;
+                case 'b':
+                case 'd':
+                        //if (access(fname, F_OK) == 0) {
+                        printf("\x1b[32m>>>\x1b[36m Packages that will be installed:\x1b[0m \n");
+                        for (int a = 2; a < argc; a++){
+                                fpc(argv[a], 1, opt);
+                                if(inst(argv[a])==0){
+                                        if(cifi(fopen("/var/db/rp/world", "r"), argv[a]) == 0){
+                                                FILE *ok=fopen("/var/db/rp/world", "a");
+                                                fprintf(ok, "%s\n", argv[a]); fclose(ok);
+                                        }
+                                }
+                        }
+                        exit(0);
+                return 0;
+                case 's':
+                case 'r':
+                        printf("\x1b[32m>>>\x1b[36m Packages that will be removed:\x1b[0m \n");
+                        for (int a = 2; a < argc; a++){
+                                if(opt!='s'){
+                                        fpc(argv[a], 2, opt);
+                                }else{
+                                        printf("\x1b[32m>>>\x1b[0m %s\n", argv[a]);
+                                }
+                                uni(argv[a]);
+                        }
+                        exit(0);
+                case 'u':
+                        printf("\x1b[32m>>>\x1b[36m Packages that will be installed:\x1b[0m \n");
+                        inst("rp");
+                        exit(0);
+                        
+                case 'l':
+                        char li[64];
+                        FILE *kkk=fopen("/var/db/rp/world", "r");
+                        while (fgets(li, 64, kkk)){
+                                printf("\x1b[32m>>>\x1b[0m %s", li);
+                        }
+                        exit(0);
         }
+
 }
