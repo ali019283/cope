@@ -42,7 +42,7 @@ static char *extract(const char *filename){
 	flags |= ARCHIVE_EXTRACT_FFLAGS;
 	a = archive_read_new();
         archive_read_support_format_all(a);
-	archive_read_support_compression_all(a);
+	archive_read_support_filter_all(a);
 	ext = archive_write_disk_new();
 	archive_write_disk_set_options(ext, flags);
 	archive_write_disk_set_standard_lookup(ext);
@@ -118,49 +118,20 @@ int download(char *url, char *destination){
 	}
 	return 0;
 }
-int inst(char *b);
-int is(int i, char s[]);
-int fpc(char *b, int kl, char *opt);
-int cifi(FILE *ok, char *s[]);
-int uni(char *st);
-int main(int argc, char *argv[]){
-	if(geteuid() != 0)
-        {
-            printf("\x1b[33m>>>\x1b[31m This program needs root privilages, exiting\x1b[0m\n");
-            exit(0);
+int cifi(FILE *ok, char *s){
+        char k[120];
+        int j=0;
+        while(fgets(k, 120, ok) !=NULL){
+                j++;
+                if(k[strlen(k)-1]=='\n'){
+                       k[strlen(k)-1]='\0';
+                }
+                if(strcmp(s, k) == 0){
+                        return j;
+                }
         }
-    	char opt = argc > 1 ? argv[1][0] : ' ';
-	char *temp_dir = "/root/.cache/pk/";
-	chdir(temp_dir);
-	switch (opt) {
-        case 'b':
-        case 'd':
-	      printf("\x1b[32m>>>\x1b[36m Packages that will be installed:\x1b[0m \n");
-	      for (int a = 2; a < argc; a++){
-                      fpc(argv[a], 1, opt);
-                      if(inst(argv[a])==0){
-                              char kk[120];
-                              snprintf(kk, "%s", "%s", argv[a]);
-                              if(cifi(fopen("/var/db/rp/world", "r"), kk) == 0){
-                                      FILE *ok=fopen("/var/db/rp/world", "a");
-                                      fprintf(ok, "%s\n", argv[a]); fclose(ok);
-                              }
-                      }
-	      }
-	      return 0;
-        case 's':
-        case 'r':
-              printf("\x1b[32m>>>\x1b[36m Packages that will be removed:\x1b[0m \n");
-              for (int a = 2; a < argc; a++){
-                    if(opt!='s'){
-                            fpc(argv[a], 2, opt);
-                    }else{
-                            printf("\x1b[32m>>>\x1b[0m %s\n", argv[a]);
-                    }
-                    uni(argv[a]);
-              }
-	      return 0;
-        }
+        fclose(ok);
+        return 0;
 }
 int uni(char *st){
         char rm[120];
@@ -200,64 +171,6 @@ int uni(char *st){
         fprintf(kkk, "%s", jk);
         fclose(kkk);
         return 0;
-}
-int cifi(FILE *ok, char *s[]){
-        char k[120];
-        int j=0;
-        while(fgets(k, 120, ok) !=NULL){
-                j++;
-                if(k[strlen(k)-1]=='\n'){
-                       k[strlen(k)-1]='\0';
-                }
-                if(strcmp(s, k) == 0){
-                        return j;
-                }
-        }
-        fclose(ok);
-        return 0;
-}
-int fpc(char *b, int kl, char *opt){
-        strcat(pac, b);
-	char depend[120];
-	sprintf(depend, "/var/db/rp/%s/depends", b);
-	char s[120];
-	printf("\x1b[32m>>>\x1b[0m %s\n", b);
-	FILE *dep = fopen(depend, "r");
-	if(dep==NULL){
-		printf("\x1b[32m>>>\x1b[35m Package '%s' doesnt have any dependency folder, skiping dependency check\x1b[0m\n", b);
-		return 1;
-	}
-        FILE *ok=fopen("/var/db/rp/world", "r");
-	while (fgets(s, 120, dep)!=NULL){
-                s[strlen(s)-1]='\0';
-		char kk[120]="";
-		if(kl!=1){
-			for(int i = 0; i<=strlen(pac)-strlen(s); i++){
-				strncpy(kk, pac+i, strlen(s));
-				if(strcmp(kk ,s)==0){
-					printf("\x1b[33m>>>\x1b[31m Circular dependency detected, exiting cycle\x1b[0m\n", s);
-					return 0;
-				}
-			}
-		}
-                if(kl==2){
-                        fpc(s, 2, opt); 
-                        uni(s); 
-                        fclose(dep); 
-                        return 0;
-                }
-                if(cifi(ok,s)==0 || opt=='b'){
-			fpc(s, 0, opt); 
-                        inst(s);
-                }else{
-                        printf("\x1b[32m>>>\x1b[36m Dependency %s is already installed, skiping\x1b[0m\n", s);
-                        return 0;
-                }
-	}
-	fclose(dep);
-        ok=fopen("/var/db/rp/world", "a");
-        fprintf(ok, "%s\n", s); fclose(ok);
-	return 0;
 }
 int inst(char *b){
 	char buf[60], str[120], *package, build[120], source[120], ins_pkg[120], mani[120];
@@ -332,4 +245,86 @@ int inst(char *b){
         mkdir(ins_pkg, 0777);
         printf("\x1b[32m>>>\x1b[36m Succesfully installed %s\x1b[0m\n", b);
 	return 0;
+}
+int fpc(char *b, int kl, char opt){
+        strcat(pac, b);
+	char depend[120];
+	sprintf(depend, "/var/db/rp/%s/depends", b);
+	char s[120];
+	printf("\x1b[32m>>>\x1b[0m %s\n", b);
+	FILE *dep = fopen(depend, "r");
+	if(dep==NULL){
+		printf("\x1b[32m>>>\x1b[35m Package '%s' doesnt have any dependency folder, skiping dependency check\x1b[0m\n", b);
+		return 1;
+	}
+        FILE *ok=fopen("/var/db/rp/world", "r");
+	while (fgets(s, 120, dep)!=NULL){
+                s[strlen(s)-1]='\0';
+		char kk[120]="";
+		if(kl!=1){
+			for(int i = 0; i<=strlen(pac)-strlen(s); i++){
+				strncpy(kk, pac+i, strlen(s));
+				if(strcmp(kk ,s)==0){
+					printf("\x1b[33m>>>\x1b[31m Circular dependency detected, exiting cycle\x1b[0m\n", s);
+					return 0;
+				}
+			}
+		}
+                if(kl==2){
+                        fpc(s, 2, opt); 
+                        uni(s); 
+                        fclose(dep); 
+                        return 0;
+                }
+                if(cifi(ok,s)==0 || opt=='b'){
+			fpc(s, 0, opt); 
+                        inst(s);
+                }else{
+                        printf("\x1b[32m>>>\x1b[36m Dependency %s is already installed, skiping\x1b[0m\n", s);
+                        return 0;
+                }
+	}
+	fclose(dep);
+        ok=fopen("/var/db/rp/world", "a");
+        fprintf(ok, "%s\n", s); fclose(ok);
+	return 0;
+}
+int main(int argc, char *argv[]){
+	if(geteuid() != 0)
+        {
+            printf("\x1b[33m>>>\x1b[31m This program needs root privilages, exiting\x1b[0m\n");
+            exit(0);
+        }
+    	char opt = argc > 1 ? argv[1][0] : ' ';
+	char *temp_dir = "/root/.cache/pk/";
+	chdir(temp_dir);
+	switch (opt) {
+        case 'b':
+        case 'd':
+	      printf("\x1b[32m>>>\x1b[36m Packages that will be installed:\x1b[0m \n");
+	      for (int a = 2; a < argc; a++){
+                      fpc(argv[a], 1, opt);
+                      if(inst(argv[a])==0){
+                              char kk[120];
+                              snprintf(kk, "%s", "%s", argv[a]);
+                              if(cifi(fopen("/var/db/rp/world", "r"), kk) == 0){
+                                      FILE *ok=fopen("/var/db/rp/world", "a");
+                                      fprintf(ok, "%s\n", argv[a]); fclose(ok);
+                              }
+                      }
+	      }
+	      return 0;
+        case 's':
+        case 'r':
+              printf("\x1b[32m>>>\x1b[36m Packages that will be removed:\x1b[0m \n");
+              for (int a = 2; a < argc; a++){
+                    if(opt!='s'){
+                            fpc(argv[a], 2, opt);
+                    }else{
+                            printf("\x1b[32m>>>\x1b[0m %s\n", argv[a]);
+                    }
+                    uni(argv[a]);
+              }
+	      return 0;
+        }
 }
