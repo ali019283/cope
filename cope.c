@@ -119,73 +119,72 @@ int download(char *url, char *destination){
 	}
 	return 0;
 }
-int cifi(FILE *ok, char *s){
-        char k[120];
-        int j=0;
-        while(fgets(k, 120, ok) !=NULL){
-                j++;
-                if(k[strlen(k)-1]=='\n'){
-                       k[strlen(k)-1]='\0';
+int checkinstall(FILE *world, char *pack){
+        char worldl[120];
+        int line=0;
+        while(fgets(worldl, 120, world) !=NULL){
+                line++;
+                if(worldl[strlen(worldl)-1]=='\n'){
+                       worldl[strlen(worldl)-1]='\0';
                 }
-                if(strcmp(s, k) == 0){
-                        return j;
+                if(strcmp(pack, worldl) == 0){
+                        return line;
                 }
         }
-        fclose(ok);
+        fclose(world);
         return 0;
 }
-int uni(char *st){
-        char rm[120];
-        sprintf(rm, "/var/db/rp/%s/manifest", st);
-        FILE *fptr = fopen(rm, "r");
+int uninstall(char *pack){
+        char manifest[120];
+        sprintf(manifest, "/var/db/rp/%s/manifest", pack);
+        FILE *fptr = fopen(manifest, "r");
         if(fptr==NULL){
-		printf("\x1b[33m>>>\x1b[31m Can't find package '%s' to remove, skiping\x1b[0m\n", st);
+		printf("\x1b[33m>>>\x1b[31m Can't find package '%s' to remove, skiping\x1b[0m\n", pack);
 		return 1;
 	}
-        char s[120], ff[120][120];
-        int o=0;
-        while(fgets(s, 120, fptr)!=NULL){
-                strcpy(ff[o], s);
-                o++;
+        char line[120], reline[120][120];
+        int i = 0;
+        while(fgets(line, 120, fptr)!=NULL){
+                strcpy(reline[i], line);
+                i++;
         }
-        while(o>0){
-                o--;
-                strcpy(s, ff[o]);
-                if(s[strlen(s)-1] == '\n'){
-                        s[strlen(s)-1]='\0';
+        while(i>0){
+                i--;
+                strcpy(line, reline[i]);
+                if(line[strlen(line)-1] == '\n'){
+                        line[strlen(line)-1]='\0';
                 }
-                if(access(s, 0) !=0){
-                        printf("\x1b[32m>>>\x1b[36m Package '%s' is not installed\x1b[0m\n", st);
+                if(access(line, 0) !=0){
+                        printf("\x1b[32m>>>\x1b[36m Package '%s' is not installed\x1b[0m\n", pack);
                         return 0;
                 }
-                remove(s);
-        }printf("\x1b[32m>>>\x1b[36m Removed %s\n\x1b[0m", st);
-        char jk[120]="";
-        char sjk[120]="";
-        int i=0;
-        FILE *kkk=fopen("/var/db/rp/world", "r");
-        int l=cifi(fopen("/var/db/rp/world", "r"), st);
-        while(fgets(sjk, 120, kkk) != NULL){
+                remove(line);
+        }printf("\x1b[32m>>>\x1b[36m Removed %s\n\x1b[0m", pack);
+        char tempworld[1024]="";
+        char worldl[120]="";
+        i = 0;
+        FILE *world=fopen("/var/db/rp/world", "r");
+        int l=checkinstall(fopen("/var/db/rp/world", "r"), pack);
+        while(fgets(worldl, 120, world) != NULL){
                 i++;
                 if(l==i){
                         continue;
                 }
-                strcat(jk, sjk);
-        }fclose(kkk);
-        kkk=fopen("/var/db/rp/world", "w");
-        fprintf(kkk, "%s", jk);
-        fclose(kkk);
+                strcat(tempworld, worldl);
+        }fclose(world);
+        world=fopen("/var/db/rp/world", "w");
+        fprintf(world, "%s", tempworld);
+        fclose(world);
         return 0;
 }
-int inst(char *b){
-	char buf[60], str[120], *package, build[120], source[120], ins_pkg[120], mani[120];
-	sprintf(build, "/var/db/rp/%s/build", b);
-	sprintf(source, "/var/db/rp/%s/source", b);
-	sprintf(ins_pkg, "/var/db/rp/installed/%s", b);
-        sprintf(mani, "/var/db/rp/%s/manifest", b);
+int install(char *pack){
+	char buf[60], str[120], *package, build[120], source[120], manifest[120];
+	sprintf(build, "/var/db/rp/%s/build", pack);
+	sprintf(source, "/var/db/rp/%s/source", pack);
+        sprintf(manifest, "/var/db/rp/%s/manifest", pack);
         FILE *fptr = fopen(source, "r");
 	if(fptr==NULL){
-		printf("\x1b[33m>>>\x1b[31m Can't find package '%s' to install, skiping\x1b[0m\n", b);
+		printf("\x1b[33m>>>\x1b[31m Can't find package '%s' to install, skiping\x1b[0m\n", pack);
 		return 1;
 	}
         fgets(str, 120, fptr);
@@ -199,21 +198,21 @@ int inst(char *b){
         char *isgit = &packbas[strlen(packbas)-4]; if(strcmp(isgit, ".git")==0){
                 packbas[strlen(packbas)-4] = '\0';
         }
-        char *gh=packbas;
-        int lop;
+        char *extracted=packbas;
+        int checkgit;
         if(access(base, 0) == 0){
                 printf("\x1b[32m>>>\x1b[36m Source file was found in cache directory, skiping download\x1b[0m\n");
         }else{
-                lop = download(str, base);
+                checkgit = download(str, base);
         }
-        if(lop != 2){
+        if(checkgit != 2){
                 printf("\x1b[32m>>>\x1b[36m Extracting %s...\x1b[0m\n", packbas);
-                gh=extract(packbas);
+                extracted=extract(packbas);
         }
         mkdir("/root/.cache/pk/pkg_dir", 0700);
         setenv("DESTDIR", "/root/.cache/pk/pkg_dir", 1);
-        printf("\x1b[32m>>>\x1b[36m Changing directory to %s\x1b[0m\n", gh);
-        chdir(gh);
+        printf("\x1b[32m>>>\x1b[36m Changing directory to %s\x1b[0m\n", extracted);
+        chdir(extracted);
 	while(fgets(str, 120, fptr)!=NULL){
                 strcpy(base, basename(str)); 
                       if(base[strlen(base)-1] == '\n'){
@@ -224,8 +223,8 @@ int inst(char *b){
         }fclose(fptr);
 	system(build);
         chdir("/root/.cache/pk");
-        remove(mani); open(mani, O_RDWR | O_CREAT, S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR);
-        FILE *man=fopen(mani, "a");
+        remove(manifest); open(manifest, O_RDWR | O_CREAT, S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR);
+        FILE *man=fopen(manifest, "a");
         printf("\x1b[32m>>>\x1b[36m Generating manifest...\x1b[0m\n");
         int manif(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf){
                 if(typeflag == FTW_D){
@@ -245,57 +244,56 @@ int inst(char *b){
                 fprintf(man, "%s\n", fpath+23); 
                 return 0;
         }int rme(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf){return remove(fpath);}
-        nftw("/root/.cache/pk/pkg_dir",manif,64, 0); nftw("/root/.cache/pk/pkg_dir",rme,64, FTW_DEPTH);
+        nftw("/root/.cache/pk/pkg_dir", manif, 64, 0); nftw("/root/.cache/pk/pkg_dir", rme, 64, FTW_DEPTH);
 	fclose(man);
-        mkdir(ins_pkg, 0777);
-        printf("\x1b[32m>>>\x1b[36m Succesfully installed %s\x1b[0m\n", b);
+        printf("\x1b[32m>>>\x1b[36m Succesfully installed %s\x1b[0m\n", pack);
 	return 0;
 }
-int fpc(char *b, int kl, char opt){
-        strcat(pac, b);
+int dependcheck(char *pack, int uni, char opt){
+        strcat(pac, pack);
 	char depend[120];
-	sprintf(depend, "/var/db/rp/%s/depends", b);
-	char s[120];
-	printf("\x1b[32m>>>\x1b[0m %s\n", b);
+	sprintf(depend, "/var/db/rp/%s/depends", pack);
+	char deppack[120];
+	printf("\x1b[32m>>>\x1b[0m %s\n", pack);
 	FILE *dep = fopen(depend, "r");
 	if(dep==NULL){
-		printf("\x1b[32m>>>\x1b[35m Package '%s' doesnt have any dependency folder, skiping dependency check\x1b[0m\n", b);
+		printf("\x1b[32m>>>\x1b[35m Package '%s' doesnt have any dependency folder, skiping dependency check\x1b[0m\n", pack);
 		return 1;
 	}
-        FILE *ok=fopen("/var/db/rp/world", "r");
-	while (fgets(s, 120, dep)!=NULL){
-                s[strlen(s)-1]='\0';
-		char kk[120]="";
-		if(kl!=1){
-			for(int i = 0; i<=strlen(pac)-strlen(s); i++){
-				strncpy(kk, pac+i, strlen(s));
-				if(strcmp(kk ,s)==0){
-					printf("\x1b[33m>>>\x1b[31m Circular dependency detected, exiting cycle\x1b[0m\n", s);
+        FILE *world=fopen("/var/db/rp/world", "r");
+	while (fgets(deppack, 120, dep)!=NULL){
+                deppack[strlen(deppack)-1]='\0';
+		char paclist[120]="";
+		if(uni!=1){
+			for(int i = 0; i<=strlen(pac)-strlen(deppack); i++){
+				strncpy(paclist, pac+i, strlen(deppack));
+				if(strcmp(paclist, deppack)==0){
+					printf("\x1b[33m>>>\x1b[31m Circular dependency detected, exiting cycle\x1b[0m\n", deppack);
 					return 0;
 				}
 			}
 		}
-                if(kl==2){
-                        fpc(s, 2, opt); 
-                        uni(s); 
+                if(uni==2){
+                        dependcheck(deppack, 2, opt); 
+                        uninstall(deppack); 
                         fclose(dep); 
                         return 0;
-                }else if(cifi(ok,s)==0){
-			fpc(s, 0, opt); 
-                        inst(s);
                 }else if(opt=='b'){
-			fpc(s, 0, opt); 
-                        inst(s);
+			dependcheck(deppack, 0, opt); 
+                        install(deppack);
                         fclose(dep);
                         return 0;
+                }else if(checkinstall(world, deppack)==0){
+			dependcheck(deppack, 0, opt); 
+                        install(deppack);
                 }else{
-                        printf("\x1b[32m>>>\x1b[36m Dependency %s is already installed, skiping\x1b[0m\n", s);
+                        printf("\x1b[32m>>>\x1b[36m Dependency %s is already installed, skiping\x1b[0m\n", deppack);
                         return 0;
                 }
 	}
 	fclose(dep);
-        ok=fopen("/var/db/rp/world", "a");
-        fprintf(ok, "%s\n", s); fclose(ok);
+        world=fopen("/var/db/rp/world", "a");
+        fprintf(world, "%s\n", deppack); fclose(world);
 	return 0;
 }
 int main(int argc, char *argv[]){
@@ -312,11 +310,11 @@ int main(int argc, char *argv[]){
                 case 'd':
                         printf("\x1b[32m>>>\x1b[36m Packages that will be installed:\x1b[0m \n");
                         for (int a = 2; a < argc; a++){
-                                fpc(argv[a], 1, opt);
-                                if(inst(argv[a])==0){
-                                        if(cifi(fopen("/var/db/rp/world", "r"), argv[a]) == 0){
-                                                FILE *ok=fopen("/var/db/rp/world", "a");
-                                                fprintf(ok, "%s\n", argv[a]); fclose(ok);
+                                dependcheck(argv[a], 1, opt);
+                                if(install(argv[a])==0){
+                                        if(checkinstall(fopen("/var/db/rp/world", "r"), argv[a]) == 0){
+                                                FILE *world=fopen("/var/db/rp/world", "a");
+                                                fprintf(world, "%s\n", argv[a]); fclose(world);
                                         }
                                 }
                         }
@@ -324,37 +322,37 @@ int main(int argc, char *argv[]){
                 case 'f':
                         printf("\x1b[32m>>>\x1b[36m Packages that will be installed:\x1b[0m \n");
                         for (int a = 2; a < argc; a++){
-                                if(inst(argv[a])==0){
-                                        if(cifi(fopen("/var/db/rp/world", "r"), argv[a]) == 0){
-                                                FILE *ok=fopen("/var/db/rp/world", "a");
-                                                fprintf(ok, "%s\n", argv[a]); fclose(ok);
+                                if(install(argv[a])==0){
+                                        if(checkinstall(fopen("/var/db/rp/world", "r"), argv[a]) == 0){
+                                                FILE *world=fopen("/var/db/rp/world", "a");
+                                                fprintf(world, "%s\n", argv[a]); fclose(world);
                                         }
                                 }
                         }
                         exit(0);
-                return 0;
+                        return 0;
                 case 's':
                 case 'r':
                         printf("\x1b[32m>>>\x1b[36m Packages that will be removed:\x1b[0m \n");
                         for (int a = 2; a < argc; a++){
                                 if(opt!='s'){
-                                        fpc(argv[a], 2, opt);
+                                        dependcheck(argv[a], 2, opt);
                                 }else{
                                         printf("\x1b[32m>>>\x1b[0m %s\n", argv[a]);
                                 }
-                                uni(argv[a]);
+                                uninstall(argv[a]);
                         }
                         exit(0);
                 case 'u':
-                        printf("\x1b[32m>>>\x1b[36m Packages that will be installed:\x1b[0m \n");
-                        inst("rp");
+                        printf("\x1b[32m>>>\x1b[36m Updating repo\x1b[0m \n");
+                        install("rp");
                         exit(0);
                         
                 case 'l':
-                        char li[64];
-                        FILE *kkk=fopen("/var/db/rp/world", "r");
-                        while (fgets(li, 64, kkk)){
-                                printf("\x1b[32m>>>\x1b[0m %s", li);
+                        char line[64];
+                        FILE *worldr=fopen("/var/db/rp/world", "r");
+                        while (fgets(line, 64, worldr)){
+                                printf("\x1b[32m>>>\x1b[0m %s", line);
                         }
                         exit(0);
         }

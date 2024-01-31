@@ -17,6 +17,12 @@ don't expect much out of it, it may lack some important features and it may have
 +-------------------------------------------------------------------+
 ```
 
+# TODO: 
+```
+-add runtime dependency support
+-cleaner code maybe?
+```
+
 # installing / compiling
 run 
 ```
