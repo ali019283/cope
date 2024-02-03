@@ -247,6 +247,10 @@ int install(char *pack){
         nftw("/root/.cache/pk/pkg_dir", manif, 64, 0); nftw("/root/.cache/pk/pkg_dir", rme, 64, FTW_DEPTH);
 	fclose(man);
         printf("\x1b[32m>>>\x1b[36m Succesfully installed %s\x1b[0m\n", pack);
+        if(checkinstall(fopen("/var/db/rp/world", "r"), pack) == 0){
+                FILE *world=fopen("/var/db/rp/world", "a");
+                fprintf(world, "%s\n", pack); fclose(world);
+        }
 	return 0;
 }
 int dependcheck(char *pack, int uni, char opt){
@@ -291,9 +295,7 @@ int dependcheck(char *pack, int uni, char opt){
                         return 0;
                 }
 	}
-	fclose(dep);
-        world=fopen("/var/db/rp/world", "a");
-        fprintf(world, "%s\n", deppack); fclose(world);
+	fclose(dep); fclose(world);
 	return 0;
 }
 int main(int argc, char *argv[]){
@@ -311,23 +313,13 @@ int main(int argc, char *argv[]){
                         printf("\x1b[32m>>>\x1b[36m Packages that will be installed:\x1b[0m \n");
                         for (int a = 2; a < argc; a++){
                                 dependcheck(argv[a], 1, opt);
-                                if(install(argv[a])==0){
-                                        if(checkinstall(fopen("/var/db/rp/world", "r"), argv[a]) == 0){
-                                                FILE *world=fopen("/var/db/rp/world", "a");
-                                                fprintf(world, "%s\n", argv[a]); fclose(world);
-                                        }
-                                }
+                                install(argv[a]);
                         }
                         exit(0);
                 case 'f':
                         printf("\x1b[32m>>>\x1b[36m Packages that will be installed:\x1b[0m \n");
                         for (int a = 2; a < argc; a++){
-                                if(install(argv[a])==0){
-                                        if(checkinstall(fopen("/var/db/rp/world", "r"), argv[a]) == 0){
-                                                FILE *world=fopen("/var/db/rp/world", "a");
-                                                fprintf(world, "%s\n", argv[a]); fclose(world);
-                                        }
-                                }
+                                install(argv[a]);
                         }
                         exit(0);
                         return 0;
