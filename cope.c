@@ -11,6 +11,13 @@
 #include <stdio.h>
 #include <archive.h>
 #include <archive_entry.h>
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
 char pac[240];
 int copy_data(struct archive *ar, struct archive *aw){
 	int r;
@@ -89,7 +96,7 @@ int download_write_data(void *pointer, size_t size, size_t nmemb, FILE *stream){
 int download(char *url, char *destination){
         char *isgit = &url[strlen(url)-4];
         if(strcmp(isgit, ".git") == 0){
-                printf("\x1b[32m>>>\x1b[36m Downloading git source %s...\x1b[0m\n", url);
+                printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_CYAN "Downloading git source %s...\n" ANSI_COLOR_RESET, url);
                 char turl[480]="git clone --depth=1 ";
                 strcat(turl, url);
                 char * const k = strrchr(url, '.');
@@ -111,7 +118,7 @@ int download(char *url, char *destination){
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, download_write_data);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, output);
-		printf("\x1b[32m>>>\x1b[36m Downloading %s...\x1b[0m\n", destination);
+		printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_CYAN "Downloading %s...\n" ANSI_COLOR_RESET, destination);
 		result = curl_easy_perform(curl);
 		curl_easy_cleanup(curl);
 		fclose(output);
@@ -139,7 +146,7 @@ int uninstall(char *pack){
         sprintf(manifest, "/var/db/rp/%s/manifest", pack);
         FILE *fptr = fopen(manifest, "r");
         if(fptr==NULL){
-		printf("\x1b[33m>>>\x1b[31m Can't find package '%s' to remove, skiping\x1b[0m\n", pack);
+		printf(ANSI_COLOR_YELLOW ">>> " ANSI_COLOR_RED "Can't find package '%s' to remove, skiping\n" ANSI_COLOR_RESET, pack);
 		return 1;
 	}
         char line[120], reline[120][120];
@@ -155,11 +162,11 @@ int uninstall(char *pack){
                         line[strlen(line)-1]='\0';
                 }
                 if(access(line, 0) !=0){
-                        printf("\x1b[32m>>>\x1b[36m Package '%s' is not installed\x1b[0m\n", pack);
+                        printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_MAGENTA "Package '%s' is not installed\n" ANSI_COLOR_RESET, pack);
                         return 0;
                 }
                 remove(line);
-        }printf("\x1b[32m>>>\x1b[36m Removed %s\n\x1b[0m", pack);
+        }printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_CYAN "Removed %s\n" ANSI_COLOR_RESET, pack);
         char tempworld[1024]="";
         char worldl[120]="";
         i = 0;
@@ -184,7 +191,7 @@ int install(char *pack){
         sprintf(manifest, "/var/db/rp/%s/manifest", pack);
         FILE *fptr = fopen(source, "r");
 	if(fptr==NULL){
-		printf("\x1b[33m>>>\x1b[31m Can't find package '%s' to install, skiping\x1b[0m\n", pack);
+		printf(ANSI_COLOR_YELLOW ">>> " ANSI_COLOR_RED "Can't find package '%s' to install, skiping\n" ANSI_COLOR_RESET, pack);
 		return 1;
 	}
         fgets(str, 120, fptr);
@@ -201,17 +208,17 @@ int install(char *pack){
         char *extracted=packbas;
         int checkgit;
         if(access(base, 0) == 0){
-                printf("\x1b[32m>>>\x1b[36m Source file was found in cache directory, skiping download\x1b[0m\n");
+                printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_CYAN "Source file was found in cache directory, skiping download\n" ANSI_COLOR_RESET);
         }else{
                 checkgit = download(str, base);
         }
         if(checkgit != 2){
-                printf("\x1b[32m>>>\x1b[36m Extracting %s...\x1b[0m\n", packbas);
+                printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_CYAN "Extracting %s...\n" ANSI_COLOR_RESET, packbas);
                 extracted=extract(packbas);
         }
         mkdir("/root/.cache/pk/pkg_dir", 0700);
         setenv("DESTDIR", "/root/.cache/pk/pkg_dir", 1);
-        printf("\x1b[32m>>>\x1b[36m Changing directory to %s\x1b[0m\n", extracted);
+        printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_CYAN "Changing directory to %s\n" ANSI_COLOR_RESET, extracted);
         chdir(extracted);
 	while(fgets(str, 120, fptr)!=NULL){
                 strcpy(base, basename(str)); 
@@ -225,15 +232,15 @@ int install(char *pack){
         chdir("/root/.cache/pk");
         remove(manifest); open(manifest, O_RDWR | O_CREAT, S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR);
         FILE *man=fopen(manifest, "a");
-        printf("\x1b[32m>>>\x1b[36m Generating manifest...\x1b[0m\n");
+        printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_CYAN "Generating manifest...\n" ANSI_COLOR_RESET);
         int manif(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf){
                 if(typeflag == FTW_D){
                         fprintf(man, "%s/\n", fpath+23);
                         mkdir(fpath+23, 0755);
-                        printf("\x1b[32m>>>\x1b[0m %s/\n", fpath+23);
+                        printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_RESET "%s/\n", fpath+23);
                         return 0;
                 }
-                printf("\x1b[32m>>>\x1b[0m %s\n", fpath+23);
+                printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_RESET "%s\n", fpath+23);
                 int in=open(fpath, O_RDONLY), ou=creat(fpath+23, 0660);
                 off_t by = 0;
                 struct stat fi = {0};
@@ -246,7 +253,7 @@ int install(char *pack){
         }int rme(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf){return remove(fpath);}
         nftw("/root/.cache/pk/pkg_dir", manif, 64, 0); nftw("/root/.cache/pk/pkg_dir", rme, 64, FTW_DEPTH);
 	fclose(man);
-        printf("\x1b[32m>>>\x1b[36m Succesfully installed %s\x1b[0m\n", pack);
+        printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_CYAN "Succesfully installed %s\n" ANSI_COLOR_RESET, pack);
         if(checkinstall(fopen("/var/db/rp/world", "r"), pack) == 0){
                 FILE *world=fopen("/var/db/rp/world", "a");
                 fprintf(world, "%s\n", pack); fclose(world);
@@ -254,25 +261,27 @@ int install(char *pack){
 	return 0;
 }
 int dependcheck(char *pack, int uni, char opt){
-        strcat(pac, pack);
+	strcat(pac, pack);
 	char depend[120];
 	sprintf(depend, "/var/db/rp/%s/depends", pack);
 	char deppack[120];
-	printf("\x1b[32m>>>\x1b[0m %s\n", pack);
+	printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_RESET "%s\n", pack);
 	FILE *dep = fopen(depend, "r");
 	if(dep==NULL){
-		printf("\x1b[32m>>>\x1b[35m Package '%s' doesnt have any dependency folder, skiping dependency check\x1b[0m\n", pack);
+		printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_MAGENTA "Package '%s' doesnt have any dependency folder, skiping dependency check\n" ANSI_COLOR_RESET, pack);
 		return 1;
 	}
         FILE *world=fopen("/var/db/rp/world", "r");
 	while (fgets(deppack, 120, dep)!=NULL){
-                deppack[strlen(deppack)-1]='\0';
+                /* TODO: change deppack here and write it off as build time */
+		/* TODO: check if it was already installed before, if it was dont add as build time*/
+		deppack[strlen(deppack)-1]='\0';
 		char paclist[120]="";
 		if(uni!=1){
 			for(int i = 0; i<=strlen(pac)-strlen(deppack); i++){
 				strncpy(paclist, pac+i, strlen(deppack));
 				if(strcmp(paclist, deppack)==0){
-					printf("\x1b[33m>>>\x1b[31m Circular dependency detected, exiting cycle\x1b[0m\n", deppack);
+					printf(ANSI_COLOR_YELLOW ">>> " ANSI_COLOR_RED "Circular dependency detected, exiting cycle\n" ANSI_COLOR_RESET, deppack);
 					return 0;
 				}
 			}
@@ -291,7 +300,7 @@ int dependcheck(char *pack, int uni, char opt){
 			dependcheck(deppack, 0, opt); 
                         install(deppack);
                 }else{
-                        printf("\x1b[32m>>>\x1b[36m Dependency %s is already installed, skiping\x1b[0m\n", deppack);
+                        printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_CYAN "Dependency %s is already installed, skiping\n" ANSI_COLOR_RESET, deppack);
                         return 0;
                 }
 	}
@@ -301,7 +310,7 @@ int dependcheck(char *pack, int uni, char opt){
 int main(int argc, char *argv[]){
 	if(geteuid() != 0)
         {
-            printf("\x1b[33m>>>\x1b[31m This program needs root privilages, exiting\x1b[0m\n");
+            printf(ANSI_COLOR_YELLOW ">>> " ANSI_COLOR_RED "This program needs root privilages, exiting\n" ANSI_COLOR_RESET);
             exit(0);
         }
     	char opt = argc > 1 ? argv[1][0] : ' ';
@@ -310,33 +319,34 @@ int main(int argc, char *argv[]){
 	switch (opt) {
                 case 'b':
                 case 'd':
-                        printf("\x1b[32m>>>\x1b[36m Packages that will be installed:\x1b[0m \n");
+                        printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_CYAN "Packages that will be installed: \n" ANSI_COLOR_RESET);
                         for (int a = 2; a < argc; a++){
                                 dependcheck(argv[a], 1, opt);
                                 install(argv[a]);
                         }
                         exit(0);
                 case 'f':
-                        printf("\x1b[32m>>>\x1b[36m Packages that will be installed:\x1b[0m \n");
+                        printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_CYAN "Packages that will be installed: \n" ANSI_COLOR_RESET);
                         for (int a = 2; a < argc; a++){
                                 install(argv[a]);
                         }
                         exit(0);
+			/* TODO: ask here if you want to remove the build time dependencies */
                         return 0;
                 case 's':
                 case 'r':
-                        printf("\x1b[32m>>>\x1b[36m Packages that will be removed:\x1b[0m \n");
+                        printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_CYAN "Packages that will be removed: \n" ANSI_COLOR_RESET);
                         for (int a = 2; a < argc; a++){
                                 if(opt!='s'){
                                         dependcheck(argv[a], 2, opt);
                                 }else{
-                                        printf("\x1b[32m>>>\x1b[0m %s\n", argv[a]);
+                                        printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_RESET "%s\n", argv[a]);
                                 }
                                 uninstall(argv[a]);
                         }
                         exit(0);
                 case 'u':
-                        printf("\x1b[32m>>>\x1b[36m Updating repo\x1b[0m \n");
+                        printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_CYAN "Updating repo\n" ANSI_COLOR_RESET);
                         install("rp");
                         exit(0);
                         
@@ -344,7 +354,7 @@ int main(int argc, char *argv[]){
                         char line[64];
                         FILE *worldr=fopen("/var/db/rp/world", "r");
                         while (fgets(line, 64, worldr)){
-                                printf("\x1b[32m>>>\x1b[0m %s", line);
+                                printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_RESET "%s", line);
                         }
                         exit(0);
         }
