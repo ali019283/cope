@@ -129,9 +129,10 @@ int download(char *url, char *destination){
 	return 0;
 }
 int checkinstall(FILE *world, char *pack){
+        rewind(world);
         char worldl[120];
         int line=0;
-        while(fgets(worldl, 120, world) !=NULL){
+        while(fgets(worldl, 120, world)!=NULL){
                 line++;
                 if(worldl[strlen(worldl)-1]=='\n'){
                        worldl[strlen(worldl)-1]='\0';
@@ -272,17 +273,14 @@ int dependcheck(char *pack, int uni, char opt){
 		printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_MAGENTA "Package '%s' doesnt have any dependency folder, skiping dependency check\n" ANSI_COLOR_RESET, pack);
 		return 1;
 	}
-        FILE *world=fopen("/var/db/rp/world", "r");
-        FILE *world2=fopen("/var/db/rp/world", "r");
 	while (fgets(deppack, 120, dep)!=NULL){
                 deppack[strlen(deppack)-1]='\0';
                 if(deppack[strlen(deppack)-1]=='*'){
                         deppack[strlen(deppack)-1]='\0';
-                        if(checkinstall(world2, deppack)==0){
+                        if(checkinstall(fopen("/var/db/rp/world", "r"), deppack)==0){
                                 strcat(buildtime, deppack); strcat(buildtime, "*");
                         }
                 }
-		/* TODO: check if it was already installed before, if it was dont add as build time*/
 		char paclist[120]="";
 		if(uni!=1){
 			for(int i = 0; i<=strlen(pac)-strlen(deppack); i++){
@@ -303,7 +301,7 @@ int dependcheck(char *pack, int uni, char opt){
                         install(deppack);
                         fclose(dep);
                         return 0;
-                }else if(checkinstall(world, deppack)==0){
+                }else if(checkinstall(fopen("/var/db/rp/world", "r"), deppack)==0){
 			dependcheck(deppack, 0, opt); 
                         install(deppack);
                 }else{
@@ -311,7 +309,7 @@ int dependcheck(char *pack, int uni, char opt){
                         return 0;
                 }
 	}
-	fclose(dep); fclose(world);
+	fclose(dep);
 	return 0;
 }
 int main(int argc, char *argv[]){
