@@ -19,8 +19,11 @@ don't expect much out of it, it may lack some important features and it may have
 
 # TODO: 
 ```
--add runtime dependency support
 -cleaner code maybe?
+-MORE PACKAGES!!! (very important)
+-help page
+-ability to change rp position
+-version and shit (add itself as a package to update itself)
 ```
 
 # installing / compiling

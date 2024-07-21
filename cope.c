@@ -18,6 +18,8 @@
 #define ANSI_COLOR_MAGENTA "\x1b[35m"
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
+int REMOVEBUILDTIME=1;
+char buildtime[240];
 char pac[240];
 int copy_data(struct archive *ar, struct archive *aw){
 	int r;
@@ -138,7 +140,6 @@ int checkinstall(FILE *world, char *pack){
                         return line;
                 }
         }
-        fclose(world);
         return 0;
 }
 int uninstall(char *pack){
@@ -272,10 +273,16 @@ int dependcheck(char *pack, int uni, char opt){
 		return 1;
 	}
         FILE *world=fopen("/var/db/rp/world", "r");
+        FILE *world2=fopen("/var/db/rp/world", "r");
 	while (fgets(deppack, 120, dep)!=NULL){
-                /* TODO: change deppack here and write it off as build time */
+                deppack[strlen(deppack)-1]='\0';
+                if(deppack[strlen(deppack)-1]=='*'){
+                        deppack[strlen(deppack)-1]='\0';
+                        if(checkinstall(world2, deppack)==0){
+                                strcat(buildtime, deppack); strcat(buildtime, "*");
+                        }
+                }
 		/* TODO: check if it was already installed before, if it was dont add as build time*/
-		deppack[strlen(deppack)-1]='\0';
 		char paclist[120]="";
 		if(uni!=1){
 			for(int i = 0; i<=strlen(pac)-strlen(deppack); i++){
@@ -324,6 +331,18 @@ int main(int argc, char *argv[]){
                                 dependcheck(argv[a], 1, opt);
                                 install(argv[a]);
                         }
+                        if(strlen(buildtime)==0){exit(0);}
+                        char bt[120] = "";
+                        printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_CYAN "Buildtime dependencies: \n" ANSI_COLOR_RESET);
+                        for (int f = 0; buildtime[f] != '\0'; f++){
+                                if (buildtime[f] == '*') {
+                                        printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_RESET "%s\n", bt);
+                                        if (REMOVEBUILDTIME) {uninstall(bt);}
+                                        bt[0] = '\0';
+                                }else{
+                                        strncat(bt, &buildtime[f], 1);
+                                }
+                        }
                         exit(0);
                 case 'f':
                         printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_CYAN "Packages that will be installed: \n" ANSI_COLOR_RESET);
@@ -332,7 +351,6 @@ int main(int argc, char *argv[]){
                         }
                         exit(0);
 			/* TODO: ask here if you want to remove the build time dependencies */
-                        return 0;
                 case 's':
                 case 'r':
                         printf(ANSI_COLOR_GREEN ">>> " ANSI_COLOR_CYAN "Packages that will be removed: \n" ANSI_COLOR_RESET);
@@ -358,5 +376,4 @@ int main(int argc, char *argv[]){
                         }
                         exit(0);
         }
-
 }
